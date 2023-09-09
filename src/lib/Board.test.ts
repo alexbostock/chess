@@ -453,7 +453,7 @@ describe("check", () => {
   });
 });
 
-describe("moving into check", () => {
+describe("check", () => {
   test("king cannot move into check", () => {
     const board = new Board(
       [
@@ -514,5 +514,169 @@ describe("moving into check", () => {
         toPosition: positionFromEncodedCoordinates("C3"),
       })
     ).toBe(true);
+  });
+
+  test("black must move out of check", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: positionFromEncodedCoordinates("A1"),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: positionFromEncodedCoordinates("F6"),
+        },
+        {
+          colour: "black",
+          type: "bishop",
+          position: positionFromEncodedCoordinates("B2"),
+        },
+        {
+          colour: "black",
+          type: "bishop",
+          position: positionFromEncodedCoordinates("B3"),
+        },
+        {
+          colour: "white",
+          type: "pawn",
+          position: positionFromEncodedCoordinates("F4"),
+        },
+      ],
+      "white"
+    );
+
+    const kingMoveFromCheckToCheck: Move = {
+      fromPosition: positionFromEncodedCoordinates("A1"),
+      toPosition: positionFromEncodedCoordinates("A2"),
+    };
+    expect(board.isLegalMove(kingMoveFromCheckToCheck)).toBe(false);
+
+    const kingMoveOutOfCheck: Move = {
+      fromPosition: positionFromEncodedCoordinates("A1"),
+      toPosition: positionFromEncodedCoordinates("B1"),
+    };
+    expect(board.isLegalMove(kingMoveOutOfCheck)).toBe(true);
+
+    const kingMoveOutOfCheckAndCapture: Move = {
+      fromPosition: positionFromEncodedCoordinates("A1"),
+      toPosition: positionFromEncodedCoordinates("B2"),
+    };
+    expect(board.isLegalMove(kingMoveOutOfCheckAndCapture)).toBe(true);
+
+    const pawnMove: Move = {
+      fromPosition: positionFromEncodedCoordinates("F4"),
+      toPosition: positionFromEncodedCoordinates("F5"),
+    };
+    expect(board.isLegalMove(pawnMove)).toBe(false);
+  });
+});
+
+describe("allLegalMoves", () => {
+  it("lists all legal moves in a scenario", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: positionFromEncodedCoordinates("A1"),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: positionFromEncodedCoordinates("A8"),
+        },
+        {
+          colour: "white",
+          type: "pawn",
+          position: positionFromEncodedCoordinates("A2"),
+        },
+        {
+          colour: "black",
+          type: "pawn",
+          position: positionFromEncodedCoordinates("B3"),
+        },
+      ],
+      "white"
+    );
+    const legalMoves = board.allLegalMoves();
+    const expected: Move[] = [
+      {
+        fromPosition: positionFromEncodedCoordinates("A1"),
+        toPosition: positionFromEncodedCoordinates("B1"),
+      },
+      {
+        fromPosition: positionFromEncodedCoordinates("A1"),
+        toPosition: positionFromEncodedCoordinates("B2"),
+      },
+      {
+        fromPosition: positionFromEncodedCoordinates("A2"),
+        toPosition: positionFromEncodedCoordinates("A3"),
+      },
+      {
+        fromPosition: positionFromEncodedCoordinates("A2"),
+        toPosition: positionFromEncodedCoordinates("A4"),
+      },
+      {
+        fromPosition: positionFromEncodedCoordinates("A2"),
+        toPosition: positionFromEncodedCoordinates("B3"),
+      },
+    ];
+    expect(legalMoves).toEqual(expected);
+  });
+
+  it("identifies stalemate", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: positionFromEncodedCoordinates("A1"),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: positionFromEncodedCoordinates("F8"),
+        },
+        {
+          colour: "black",
+          type: "queen",
+          position: positionFromEncodedCoordinates("B3"),
+        },
+      ],
+      "white"
+    );
+    expect(board.allLegalMoves()).toHaveLength(0);
+    expect(board.isStalemate()).toBe(true);
+    expect(board.isCheckmate()).toBe(false);
+  });
+
+  it("identifies checkmate", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: positionFromEncodedCoordinates("C3"),
+        },
+        {
+          colour: "white",
+          type: "queen",
+          position: positionFromEncodedCoordinates("B2"),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: positionFromEncodedCoordinates("A1"),
+        },
+      ],
+      "black"
+    );
+
+    expect(board.allLegalMoves()).toHaveLength(0);
+    expect(board.isCheckmate()).toBe(true);
+    expect(board.isStalemate()).toBe(false);
   });
 });

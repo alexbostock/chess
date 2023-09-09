@@ -1,5 +1,9 @@
 import { potentialCaptureMoves, potentialNonCaptureMoves } from "./Piece";
-import Position, { allRowsOrFiles, findPositionsBetween } from "./Position";
+import Position, {
+  allRowsOrFiles,
+  allValidPositions,
+  findPositionsBetween,
+} from "./Position";
 
 export type PieceColour = "white" | "black";
 export type PieceType =
@@ -127,9 +131,6 @@ export default class Board {
     return false;
   }
 
-  // TODO: identify stalemate
-  // TODO: identify checkmate
-
   // TODO: en passant
   // TODO: castling
 
@@ -184,6 +185,37 @@ export default class Board {
     }
 
     return true;
+  }
+
+  allLegalMoves() {
+    const currentPlayersPieces = this.pieces.filter(
+      ({ colour }) => colour === this.nextToMove
+    );
+    const allLegalMoves: Move[] = [];
+    for (const piece of currentPlayersPieces) {
+      for (const toPosition of allValidPositions) {
+        const move = {
+          fromPosition: piece.position,
+          toPosition,
+        };
+        if (this.isLegalMove(move)) {
+          allLegalMoves.push(move);
+        }
+      }
+    }
+    return allLegalMoves;
+  }
+
+  isStalemate() {
+    return (
+      this.allLegalMoves().length === 0 && !this.playerInCheck(this.nextToMove)
+    );
+  }
+
+  isCheckmate() {
+    return (
+      this.allLegalMoves().length === 0 && this.playerInCheck(this.nextToMove)
+    );
   }
 
   isBlocked(piece: Piece, destination: Position) {
