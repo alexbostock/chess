@@ -1,3 +1,4 @@
+import { potentialCaptureMoves } from "./Piece";
 import Position, { allRowsOrFiles } from "./Position";
 
 export type PieceColour = "white" | "black";
@@ -9,10 +10,15 @@ export type PieceType =
   | "queen"
   | "king";
 
-interface Piece {
+export interface Piece {
   colour: PieceColour;
   type: PieceType;
   position: Position;
+}
+
+interface Move {
+  fromPosition: Position;
+  toPosition: Position;
 }
 
 function createDefaultPieces(): Piece[] {
@@ -52,9 +58,13 @@ export default class Board {
   private pieces: Piece[];
   nextToMove: PieceColour;
 
-  constructor() {
-    this.pieces = createDefaultPieces();
-    this.nextToMove = "white";
+  constructor(pieces?: Piece[], nextToMove?: PieceColour) {
+    this.pieces = pieces ?? createDefaultPieces();
+    this.nextToMove = nextToMove ?? "white";
+
+    if (!this.hasLegalState()) {
+      throw new Error("Illegal position");
+    }
   }
 
   pieceAtPosition(position: Position): Piece | undefined {
@@ -63,5 +73,68 @@ export default class Board {
         return piece;
       }
     }
+  }
+
+  hasLegalState(): boolean {
+    const occupiedCoords = new Set<string>();
+    for (const piece of this.pieces) {
+      const coords = piece.position.encodedCoordinate;
+      if (occupiedCoords.has(coords)) {
+        return false;
+      }
+      occupiedCoords.add(coords);
+    }
+
+    const whiteKings = this.pieces.filter(
+      ({ colour, type }) => colour === "white" && type === "king"
+    );
+    const blackKings = this.pieces.filter(
+      ({ colour, type }) => colour === "black" && type === "king"
+    );
+    if (whiteKings.length !== 1 || blackKings.length !== 1) {
+      return false;
+    }
+
+    const justMovedPlayer = this.nextToMove === "white" ? "black" : "white";
+    if (this.playerInCheck(justMovedPlayer)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  playerInCheck(kingColour: PieceColour): boolean {
+    const king = this.pieces.find(
+      ({ colour, type }) => colour === kingColour && type === "king"
+    );
+    if (!king) {
+      throw new Error("Internal error: invalid state");
+    }
+    const opposingPieces = this.pieces.filter(
+      (piece) => piece.colour !== kingColour
+    );
+    for (const piece of opposingPieces) {
+      for (const capturePosition of potentialCaptureMoves(piece)) {
+        const threatensking =
+          capturePosition.x === king.position.x &&
+          capturePosition.y === king.position.y;
+        if (threatensking) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  // TODO: identify stalemate
+  // TODO: identify checkmate
+
+  // TODO: en passant
+  // TODO: castling
+
+  isLegalMove(move: Move): boolean {
+    // TODO: implement this
+    return false;
   }
 }

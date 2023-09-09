@@ -1,6 +1,10 @@
 type RowOrFileNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export const allRowsOrFiles: RowOrFileNumber[] = [0, 1, 2, 3, 4, 5, 6, 7];
 
+export function isValidRowOrFileNumber(num: number): num is RowOrFileNumber {
+  return allRowsOrFiles.some((x) => x === num);
+}
+
 const fileMapping: Record<string, RowOrFileNumber> = {
   A: 0,
   B: 1,
@@ -62,3 +66,7 @@ export function positionFromEncodedCoordinates(
   }
   return new Position(fileNumber, rowNumber);
 }
+
+export const allValidPositions: readonly Position[] = allRowsOrFiles
+  .map((file) => allRowsOrFiles.map((row) => new Position(file, row)))
+  .reduce((allPositions, filePositions) => [...allPositions, ...filePositions]);

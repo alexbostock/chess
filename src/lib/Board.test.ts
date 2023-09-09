@@ -1,7 +1,7 @@
-import Board, { PieceColour, PieceType } from "./Board";
-import { positionFromEncodedCoordinates } from "./Position";
+import Board, { Piece, PieceColour, PieceType } from "./Board";
+import Position, { positionFromEncodedCoordinates } from "./Position";
 
-describe("Initial state", () => {
+describe("Default initial state", () => {
   test("white is first to move", () => {
     const board = new Board();
     expect(board.nextToMove).toBe("white");
@@ -62,5 +62,80 @@ describe("Initial state", () => {
       const position = positionFromEncodedCoordinates(coords);
       expect(board.pieceAtPosition(position)).toBeUndefined();
     }
+  });
+});
+
+describe("Custom state validation", () => {
+  it("throws on construction if several pieces occupy the same square", () => {
+    const pieces: Piece[] = [
+      {
+        colour: "white",
+        type: "king",
+        position: new Position(0, 0),
+      },
+      {
+        colour: "white",
+        type: "king",
+        position: new Position(0, 0),
+      },
+    ];
+    expect(() => new Board(pieces)).toThrow();
+  });
+
+  it("throws on construction if either player has no king", () => {
+    expect(() => new Board([])).toThrow();
+
+    const pieces: Piece[] = [
+      {
+        colour: "white",
+        type: "king",
+        position: new Position(1, 1),
+      },
+    ];
+    expect(() => new Board(pieces)).toThrow();
+  });
+
+  it("throws on construction if the last player to move is in check", () => {
+    const pieces: Piece[] = [
+      {
+        colour: "white",
+        type: "king",
+        position: new Position(0, 0),
+      },
+      {
+        colour: "black",
+        type: "king",
+        position: new Position(7, 7),
+      },
+      {
+        colour: "white",
+        type: "rook",
+        position: new Position(0, 7),
+      },
+    ];
+    expect(() => new Board(pieces, "white")).toThrow();
+  });
+
+  it("does not (necessarily) throw on construction if player to move is in check", () => {
+    const pieces: Piece[] = [
+      {
+        colour: "white",
+        type: "king",
+        position: new Position(0, 0),
+      },
+      {
+        colour: "black",
+        type: "king",
+        position: new Position(7, 7),
+      },
+      {
+        colour: "white",
+        type: "rook",
+        position: new Position(0, 7),
+      },
+    ];
+    const board = new Board(pieces, "black");
+    expect(board.playerInCheck("white")).toBe(false);
+    expect(board.playerInCheck("black")).toBe(true);
   });
 });
