@@ -25,6 +25,26 @@ export interface Move {
   toPosition: Position;
 }
 
+export interface HistoricalMove extends Move {
+  piece: {
+    colour: PieceColour;
+    type: PieceType;
+  };
+  capture: boolean;
+  specialMove?:
+    | {
+        enPassant: true;
+      }
+    | {
+        promotion?: PieceType;
+      }
+    | {
+        castling?: "king-side" | "queen-side";
+      };
+  attackOnKing?: "check" | "checkmate" | "stalemate";
+  gameEnd?: "white-wins" | "black-wins" | "draw";
+}
+
 function createDefaultPieces(): Piece[] {
   const whitePawns: Piece[] = allRowsOrFiles.map((x) => ({
     colour: "white",
@@ -61,10 +81,17 @@ function createDefaultPieces(): Piece[] {
 export default class Board {
   private pieces: Piece[];
   nextToMove: PieceColour;
+  pastMoves: HistoricalMove[]; // Oldest first
 
-  constructor(pieces?: Piece[], nextToMove?: PieceColour) {
+  constructor(
+    pieces?: Piece[],
+    nextToMove?: PieceColour,
+    pastMoves?: HistoricalMove[]
+  ) {
     this.pieces = pieces ?? createDefaultPieces();
     this.nextToMove = nextToMove ?? "white";
+    // TODO: validate pastMoves consistent with pieces (if both provided)?
+    this.pastMoves = pastMoves ?? [];
 
     if (!this.hasLegalState()) {
       throw new Error("Illegal position");
@@ -77,6 +104,10 @@ export default class Board {
         return piece;
       }
     }
+  }
+
+  get previousMove() {
+    return this.pastMoves.at(-1);
   }
 
   hasLegalState(): boolean {
@@ -131,10 +162,10 @@ export default class Board {
     return false;
   }
 
-  // TODO: en passant
-  // TODO: castling
-
   isLegalMove(move: Move): boolean {
+    if (this.isLegalEnPassantMove(move) || this.isLegalCastlingMove(move)) {
+      return true;
+    }
     const piece = this.pieces.find(
       ({ position: { x, y } }) =>
         x === move.fromPosition.x && y === move.fromPosition.y
@@ -181,6 +212,161 @@ export default class Board {
     }
     movedPiece.position = move.toPosition;
     if (!boardStateAfterMove.hasLegalState()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  isLegalEnPassantMove(move: Move): boolean {
+    const piece = this.pieces.find(
+      ({ position: { x, y } }) =>
+        x === move.fromPosition.x && y === move.fromPosition.y
+    );
+    if (!piece || piece.type !== "pawn") {
+      return false;
+    }
+    if (piece.colour !== this.nextToMove) {
+      return false;
+    }
+
+    const targetFile = move.toPosition.x;
+
+    // Rank numbers are 0-indexed!
+    const positionOfPieceBeingCaptured =
+      this.nextToMove === "white"
+        ? new Position(targetFile, 4)
+        : new Position(targetFile, 3);
+    const previousPositionOfPieceBeingCaptured =
+      this.nextToMove === "white"
+        ? new Position(targetFile, 6)
+        : new Position(targetFile, 1);
+
+    const validPreviousMove =
+      this.previousMove &&
+      this.previousMove.fromPosition.x ===
+        previousPositionOfPieceBeingCaptured.x &&
+      this.previousMove.fromPosition.y ===
+        previousPositionOfPieceBeingCaptured.y &&
+      this.previousMove.toPosition.x === positionOfPieceBeingCaptured.x &&
+      this.previousMove.toPosition.y === positionOfPieceBeingCaptured.y;
+
+    if (!validPreviousMove) {
+      return false;
+    }
+
+    const validFromPosition =
+      Math.abs(move.fromPosition.x - targetFile) === 1 &&
+      move.fromPosition.y === positionOfPieceBeingCaptured.y;
+    if (!validFromPosition) {
+      return false;
+    }
+
+    const boardStateAfterMove = this.clone();
+    boardStateAfterMove.nextToMove =
+      this.nextToMove === "white" ? "black" : "white";
+    boardStateAfterMove.pieces = boardStateAfterMove.pieces.filter(
+      ({ position: { x, y } }) =>
+        !(
+          x === positionOfPieceBeingCaptured.x &&
+          y === positionOfPieceBeingCaptured.y
+        )
+    );
+    const movedPiece = boardStateAfterMove.pieces.find(
+      ({ position: { x, y } }) =>
+        x === move.fromPosition.x && y === move.fromPosition.y
+    );
+    if (!movedPiece) {
+      throw Error("Internal error: should never occur");
+    }
+    movedPiece.position = move.toPosition;
+    if (!boardStateAfterMove.hasLegalState()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  isLegalCastlingMove(move: Move): boolean {
+    const castlingRow = move.fromPosition.y;
+    const kingFile = 4;
+
+    const isTwoSpaceHorizontalMoveFromKingStartSquare =
+      move.fromPosition.x === kingFile &&
+      (castlingRow === 0 || castlingRow === 7) &&
+      Math.abs(move.toPosition.x - move.fromPosition.x) === 2 &&
+      move.toPosition.y === castlingRow;
+
+    if (!isTwoSpaceHorizontalMoveFromKingStartSquare) {
+      return false;
+    }
+
+    const king = this.pieces.find(
+      ({ colour, type, position: { x, y } }) =>
+        colour === this.nextToMove &&
+        type === "king" &&
+        x === kingFile &&
+        y === castlingRow
+    );
+    const expectedRookFile = move.toPosition.x > kingFile ? 7 : 0;
+    const rook = this.pieces.find(
+      ({ colour, type, position: { x, y } }) =>
+        colour === this.nextToMove &&
+        type === "rook" &&
+        x === expectedRookFile &&
+        y === castlingRow
+    );
+    if (!king || !rook) {
+      return false;
+    }
+
+    if (this.isBlocked(king, rook.position)) {
+      return false;
+    }
+
+    if (this.playerInCheck(this.nextToMove)) {
+      return false;
+    }
+
+    const boardStateAfterMove = this.clone();
+    boardStateAfterMove.nextToMove =
+      this.nextToMove === "white" ? "black" : "white";
+    const kingBeingMoved = boardStateAfterMove.pieces.find(
+      ({ colour, type }) => colour === this.nextToMove && type === "king"
+    );
+    const rookBeingMoved = boardStateAfterMove.pieces.find(
+      ({ position: { x, y } }) => x === expectedRookFile && y === castlingRow
+    );
+    if (!kingBeingMoved || !rookBeingMoved) {
+      throw new Error("Internal error: should never occur");
+    }
+
+    // Moving through check
+    const kingIntermediateFile = move.toPosition.x > kingFile ? 5 : 3;
+    kingBeingMoved.position = new Position(kingIntermediateFile, castlingRow);
+    if (boardStateAfterMove.playerInCheck(this.nextToMove)) {
+      return false;
+    }
+
+    kingBeingMoved.position = move.toPosition;
+    const rookDestinationFile = move.toPosition.x === 6 ? 5 : 3;
+    rookBeingMoved.position = new Position(rookDestinationFile, castlingRow);
+    if (!boardStateAfterMove.hasLegalState()) {
+      return false;
+    }
+
+    const kingAlreadyMoved = this.pastMoves.some(
+      ({ piece: { colour, type } }) =>
+        colour === this.nextToMove && type === "king"
+    );
+    const rookAlreadyMoved = this.pastMoves.some(
+      ({ piece: { colour, type }, toPosition: { x, y } }) =>
+        colour === this.nextToMove &&
+        type === "rook" &&
+        x === rook.position.x &&
+        y === rook.position.y
+    );
+    if (kingAlreadyMoved || rookAlreadyMoved) {
       return false;
     }
 
