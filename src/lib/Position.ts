@@ -1,4 +1,4 @@
-type RowOrFileNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type RowOrFileNumber = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export const allRowsOrFiles: RowOrFileNumber[] = [0, 1, 2, 3, 4, 5, 6, 7];
 
 export function isValidRowOrFileNumber(num: number): num is RowOrFileNumber {
