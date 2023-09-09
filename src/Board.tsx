@@ -8,8 +8,28 @@ import { Piece } from "./lib/Piece";
 
 export default function Board(props: { board: BoardState }) {
   const rows = allRowsOrFiles.map((rowNumber) => row(props.board, rowNumber));
+  const possibleMoves = props.board.allLegalMoves();
 
-  return <div>{rows}</div>;
+  const possibleMovesList = possibleMoves.length ? (
+    <>
+      <p>Possible moves:</p>
+      <ul>
+        {possibleMoves.map(({ fromPosition, toPosition }) => (
+          <li>{`${fromPosition.encodedCoordinate} to ${toPosition.encodedCoordinate}`}</li>
+        ))}
+      </ul>
+    </>
+  ) : (
+    <></>
+  );
+
+  return (
+    <div>
+      <p>Next player to move: {props.board.nextToMove}</p>
+      {possibleMovesList}
+      <div style={{ fontSize: "3em" }}>{rows}</div>
+    </div>
+  );
 }
 
 function row(board: BoardState, rowNumber: RowOrFileNumber) {

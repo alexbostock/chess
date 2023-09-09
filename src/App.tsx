@@ -3,7 +3,7 @@ import BoardState from "./lib/Board";
 
 function App() {
   return (
-    <div style={{ fontSize: "3em" }}>
+    <div>
       <Board board={new BoardState()} />
     </div>
   );
