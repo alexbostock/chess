@@ -1,5 +1,5 @@
-import { potentialCaptureMoves } from "./Piece";
-import Position, { allRowsOrFiles } from "./Position";
+import { potentialCaptureMoves, potentialNonCaptureMoves } from "./Piece";
+import Position, { allRowsOrFiles, findPositionsBetween } from "./Position";
 
 export type PieceColour = "white" | "black";
 export type PieceType =
@@ -16,7 +16,7 @@ export interface Piece {
   position: Position;
 }
 
-interface Move {
+export interface Move {
   fromPosition: Position;
   toPosition: Position;
 }
@@ -115,10 +115,10 @@ export default class Board {
     );
     for (const piece of opposingPieces) {
       for (const capturePosition of potentialCaptureMoves(piece)) {
-        const threatensking =
+        const threatensKing =
           capturePosition.x === king.position.x &&
           capturePosition.y === king.position.y;
-        if (threatensking) {
+        if (threatensKing && !this.isBlocked(piece, capturePosition)) {
           return true;
         }
       }
@@ -134,7 +134,75 @@ export default class Board {
   // TODO: castling
 
   isLegalMove(move: Move): boolean {
-    // TODO: implement this
+    const piece = this.pieces.find(
+      ({ position: { x, y } }) =>
+        x === move.fromPosition.x && y === move.fromPosition.y
+    );
+    if (!piece) {
+      return false;
+    }
+    if (piece.colour !== this.nextToMove) {
+      return false;
+    }
+    const pieceAtDestination = this.pieces.find(
+      ({ position: { x, y } }) =>
+        x === move.toPosition.x && y === move.toPosition.y
+    );
+    if (pieceAtDestination && piece.colour === pieceAtDestination.colour) {
+      return false;
+    }
+    const potentialMoves = pieceAtDestination
+      ? potentialCaptureMoves(piece)
+      : potentialNonCaptureMoves(piece);
+    const canMoveToTarget = !!potentialMoves.find(
+      ({ x, y }) => x === move.toPosition.x && y === move.toPosition.y
+    );
+    if (!canMoveToTarget) {
+      return false;
+    }
+    if (this.isBlocked(piece, move.toPosition)) {
+      return false;
+    }
+
+    const boardStateAfterMove = this.clone();
+    boardStateAfterMove.nextToMove =
+      this.nextToMove === "white" ? "black" : "white";
+    boardStateAfterMove.pieces = boardStateAfterMove.pieces.filter(
+      ({ position: { x, y } }) =>
+        !(x === move.toPosition.x && y === move.toPosition.y)
+    );
+    const movedPiece = boardStateAfterMove.pieces.find(
+      ({ position: { x, y } }) =>
+        x === move.fromPosition.x && y === move.fromPosition.y
+    );
+    if (!movedPiece) {
+      throw Error("Internal error: should never occur");
+    }
+    movedPiece.position = move.toPosition;
+    if (!boardStateAfterMove.hasLegalState()) {
+      return false;
+    }
+
+    return true;
+  }
+
+  isBlocked(piece: Piece, destination: Position) {
+    if (piece.type === "knight") {
+      return false;
+    }
+    const squaresBetween = findPositionsBetween(piece.position, destination);
+    for (const square of squaresBetween) {
+      for (const piece of this.pieces) {
+        if (square.x === piece.position.x && square.y === piece.position.y) {
+          return true;
+        }
+      }
+    }
     return false;
+  }
+
+  clone(): Board {
+    const clonedPieces = this.pieces.map((piece) => ({ ...piece }));
+    return new Board(clonedPieces, this.nextToMove);
   }
 }

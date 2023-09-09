@@ -70,3 +70,34 @@ export function positionFromEncodedCoordinates(
 export const allValidPositions: readonly Position[] = allRowsOrFiles
   .map((file) => allRowsOrFiles.map((row) => new Position(file, row)))
   .reduce((allPositions, filePositions) => [...allPositions, ...filePositions]);
+
+export function findPositionsBetween(p1: Position, p2: Position): Position[] {
+  if (p1.x === p2.x) {
+    const maxY = Math.max(p1.y, p2.y);
+    const minY = Math.min(p1.y, p2.y);
+    return allValidPositions.filter(
+      ({ x, y }) => x === p1.x && minY < y && y < maxY
+    );
+  } else if (p1.y === p2.y) {
+    const maxX = Math.max(p1.x, p2.x);
+    const minX = Math.min(p1.x, p2.x);
+    return allValidPositions.filter(
+      ({ x, y }) => y === p1.y && minX < x && x < maxX
+    );
+  } else if (Math.abs(p1.x - p2.x) === Math.abs(p1.y - p2.y)) {
+    const maxX = Math.max(p1.x, p2.x);
+    const minX = Math.min(p1.x, p2.x);
+    const maxY = Math.max(p1.y, p2.y);
+    const minY = Math.min(p1.y, p2.y);
+    return allValidPositions.filter(
+      ({ x, y }) =>
+        minX < x &&
+        x < maxX &&
+        minY < y &&
+        y < maxY &&
+        Math.abs(p1.x - x) === Math.abs(p1.y - y)
+    );
+  } else {
+    throw Error("No path between these points");
+  }
+}

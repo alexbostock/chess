@@ -36,8 +36,17 @@ export function potentialNonCaptureMoves(piece: Piece): readonly Position[] {
   switch (piece.type) {
     case "pawn":
       return allValidPositions.filter(({ x, y }) => {
-        const nextRow = piece.colour === "white" ? p.y + 1 : p.y - 1;
-        return y === nextRow && x === p.x;
+        const startingRow = piece.colour === "white" ? 1 : 6;
+        const currentRow = p.y;
+        const nextRow =
+          piece.colour === "white" ? currentRow + 1 : currentRow - 1;
+        const twoRowsAhead =
+          piece.colour === "white" ? nextRow + 1 : nextRow - 1;
+        return (
+          (y === nextRow ||
+            (currentRow === startingRow && y === twoRowsAhead)) &&
+          x === p.x
+        );
       });
     case "bishop":
       return allValidPositions.filter(

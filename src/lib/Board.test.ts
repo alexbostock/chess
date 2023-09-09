@@ -1,4 +1,4 @@
-import Board, { Piece, PieceColour, PieceType } from "./Board";
+import Board, { Move, Piece, PieceColour, PieceType } from "./Board";
 import Position, { positionFromEncodedCoordinates } from "./Position";
 
 describe("Default initial state", () => {
@@ -137,5 +137,382 @@ describe("Custom state validation", () => {
     const board = new Board(pieces, "black");
     expect(board.playerInCheck("white")).toBe(false);
     expect(board.playerInCheck("black")).toBe(true);
+  });
+});
+
+describe("starting moves", () => {
+  test("white pawns can move on turn one", () => {
+    const board = new Board();
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("B2"),
+        toPosition: positionFromEncodedCoordinates("B3"),
+      })
+    ).toBe(true);
+
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("D2"),
+        toPosition: positionFromEncodedCoordinates("D3"),
+      })
+    ).toBe(true);
+
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("D2"),
+        toPosition: positionFromEncodedCoordinates("D4"),
+      })
+    ).toBe(true);
+  });
+
+  test("white knights can move on turn one", () => {
+    const board = new Board();
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("B1"),
+        toPosition: positionFromEncodedCoordinates("A3"),
+      })
+    ).toBe(true);
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("B1"),
+        toPosition: positionFromEncodedCoordinates("C3"),
+      })
+    ).toBe(true);
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("G1"),
+        toPosition: positionFromEncodedCoordinates("F3"),
+      })
+    ).toBe(true);
+  });
+
+  test("white cannot make illegal pawn moves", () => {
+    const board = new Board();
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("B2"),
+        toPosition: positionFromEncodedCoordinates("B5"),
+      })
+    ).toBe(false);
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("B2"),
+        toPosition: positionFromEncodedCoordinates("C3"),
+      })
+    ).toBe(false);
+  });
+
+  test("white cannot move blocked pieces", () => {
+    const board = new Board();
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("C1"),
+        toPosition: positionFromEncodedCoordinates("D2"),
+      })
+    ).toBe(false);
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("C1"),
+        toPosition: positionFromEncodedCoordinates("E3"),
+      })
+    ).toBe(false);
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("H1"),
+        toPosition: positionFromEncodedCoordinates("H4"),
+      })
+    ).toBe(false);
+  });
+
+  test("black pieces cannot move on turn one", () => {
+    const board = new Board();
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("F7"),
+        toPosition: positionFromEncodedCoordinates("F6"),
+      })
+    ).toBe(false);
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("G8"),
+        toPosition: positionFromEncodedCoordinates("F6"),
+      })
+    );
+  });
+
+  test("empty squares cannot move", () => {
+    const board = new Board();
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("A3"),
+        toPosition: positionFromEncodedCoordinates("A4"),
+      })
+    ).toBe(false);
+  });
+});
+
+describe("capturing", () => {
+  test("rook can capture within the same rank", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: positionFromEncodedCoordinates("A1"),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: positionFromEncodedCoordinates("H1"),
+        },
+        {
+          colour: "white",
+          type: "rook",
+          position: positionFromEncodedCoordinates("C3"),
+        },
+        {
+          colour: "black",
+          type: "rook",
+          position: positionFromEncodedCoordinates("E3"),
+        },
+      ],
+      "white"
+    );
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("C3"),
+        toPosition: positionFromEncodedCoordinates("E3"),
+      })
+    ).toBe(true);
+  });
+
+  test("rook cannot capture when blocked", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: positionFromEncodedCoordinates("A1"),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: positionFromEncodedCoordinates("H1"),
+        },
+        {
+          colour: "white",
+          type: "rook",
+          position: positionFromEncodedCoordinates("C3"),
+        },
+        {
+          colour: "white",
+          type: "bishop",
+          position: positionFromEncodedCoordinates("D3"),
+        },
+        {
+          colour: "black",
+          type: "knight",
+          position: positionFromEncodedCoordinates("E3"),
+        },
+      ],
+      "white"
+    );
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("C3"),
+        toPosition: positionFromEncodedCoordinates("E3"),
+      })
+    ).toBe(false);
+  });
+
+  test("pawn can capture on diagonal", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: positionFromEncodedCoordinates("A1"),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: positionFromEncodedCoordinates("H1"),
+        },
+        {
+          colour: "white",
+          type: "pawn",
+          position: positionFromEncodedCoordinates("C3"),
+        },
+        {
+          colour: "white",
+          type: "pawn",
+          position: positionFromEncodedCoordinates("D3"),
+        },
+        {
+          colour: "black",
+          type: "pawn",
+          position: positionFromEncodedCoordinates("C4"),
+        },
+      ],
+      "black"
+    );
+
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("C4"),
+        toPosition: positionFromEncodedCoordinates("D3"),
+      })
+    ).toBe(true);
+
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("C4"),
+        toPosition: positionFromEncodedCoordinates("C3"),
+      })
+    ).toBe(false);
+  });
+});
+
+describe("check", () => {
+  test("black is in check from bishop", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: new Position(0, 0),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: new Position(0, 7),
+        },
+        {
+          colour: "white",
+          type: "bishop",
+          position: new Position(2, 5),
+        },
+      ],
+      "black"
+    );
+    expect(board.playerInCheck("black")).toBe(true);
+  });
+
+  test("check from bishop blocked by rook", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: new Position(0, 0),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: new Position(0, 7),
+        },
+        {
+          colour: "white",
+          type: "bishop",
+          position: new Position(2, 5),
+        },
+        {
+          colour: "black",
+          type: "rook",
+          position: new Position(1, 6),
+        },
+      ],
+      "black"
+    );
+    expect(board.playerInCheck("black")).toBe(false);
+  });
+
+  test("white is in check from knight", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: new Position(3, 3),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: new Position(5, 5),
+        },
+        {
+          colour: "black",
+          type: "knight",
+          position: new Position(2, 1),
+        },
+      ],
+      "white"
+    );
+    expect(board.playerInCheck("white")).toBe(true);
+  });
+});
+
+describe("moving into check", () => {
+  test("king cannot move into check", () => {
+    const board = new Board(
+      [
+        {
+          colour: "white",
+          type: "king",
+          position: new Position(1, 1),
+        },
+        {
+          colour: "black",
+          type: "king",
+          position: new Position(3, 3),
+        },
+      ],
+      "white"
+    );
+    expect(
+      board.isLegalMove({
+        fromPosition: new Position(1, 1),
+        toPosition: new Position(2, 2),
+      })
+    ).toBe(false);
+  });
+
+  test("pawn cannot move to reveal check", () => {
+    const board = new Board([
+      {
+        colour: "white",
+        type: "king",
+        position: positionFromEncodedCoordinates("A1"),
+      },
+      {
+        colour: "black",
+        type: "king",
+        position: positionFromEncodedCoordinates("H1"),
+      },
+      {
+        colour: "white",
+        type: "pawn",
+        position: positionFromEncodedCoordinates("B2"),
+      },
+      {
+        colour: "black",
+        type: "bishop",
+        position: positionFromEncodedCoordinates("C3"),
+      },
+    ]);
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("B2"),
+        toPosition: positionFromEncodedCoordinates("B3"),
+      })
+    ).toBe(false);
+    // But can capture attacker
+    expect(
+      board.isLegalMove({
+        fromPosition: positionFromEncodedCoordinates("B2"),
+        toPosition: positionFromEncodedCoordinates("C3"),
+      })
+    ).toBe(true);
   });
 });

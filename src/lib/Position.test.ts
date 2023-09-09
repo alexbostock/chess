@@ -1,4 +1,7 @@
-import Position, { positionFromEncodedCoordinates } from "./Position";
+import Position, {
+  findPositionsBetween,
+  positionFromEncodedCoordinates,
+} from "./Position";
 
 describe("Position", () => {
   it("outputs coordinates in human-readable format", () => {
@@ -40,5 +43,61 @@ describe("positionFromEncodedCoordinates", () => {
     expect(() => positionFromEncodedCoordinates("1b")).toThrow();
 
     expect(() => positionFromEncodedCoordinates("a13")).toThrow();
+  });
+});
+
+describe("findPositionsBetween", () => {
+  it("returns no points when both arguments are the same", () => {
+    const positions = findPositionsBetween(
+      new Position(1, 2),
+      new Position(1, 2)
+    );
+    expect(positions).toEqual([]);
+  });
+
+  it("finds positions between two points in the same file", () => {
+    const positions = findPositionsBetween(
+      new Position(1, 3),
+      new Position(1, 7)
+    );
+    const expected = [
+      new Position(1, 4),
+      new Position(1, 5),
+      new Position(1, 6),
+    ];
+    expect(positions).toEqual(expected);
+  });
+
+  it("finds positions between two points in the same rank", () => {
+    const positions = findPositionsBetween(
+      new Position(2, 2),
+      new Position(4, 2)
+    );
+    const expected = [new Position(3, 2)];
+    expect(positions).toEqual(expected);
+  });
+
+  it("finds positions between two points in the same diagonal with +ve gradient", () => {
+    const positions = findPositionsBetween(
+      new Position(1, 3),
+      new Position(3, 5)
+    );
+    const expected = [new Position(2, 4)];
+    expect(positions).toEqual(expected);
+  });
+
+  it("finds positions between two points in the same diagonal with -ve gradient", () => {
+    const positions = findPositionsBetween(
+      new Position(1, 3),
+      new Position(3, 1)
+    );
+    const expected = [new Position(2, 2)];
+    expect(positions).toEqual(expected);
+  });
+
+  it("throws if the arguments are not on the same rank, file or diagonal", () => {
+    expect(() =>
+      findPositionsBetween(new Position(1, 3), new Position(3, 4))
+    ).toThrow();
   });
 });

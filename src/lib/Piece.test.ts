@@ -3,7 +3,7 @@ import {
   potentialCaptureMoves,
   potentialNonCaptureMoves,
 } from "./Piece";
-import Position from "./Position";
+import Position, { positionFromEncodedCoordinates } from "./Position";
 
 describe("potentialCaptureMoves", () => {
   test("white pawn captures diagonally from left file", () => {
@@ -120,6 +120,32 @@ describe("potentialNonCaptureMoves", () => {
       position: new Position(2, 5),
     });
     const expected = [new Position(2, 4)];
+    expect(moves).toEqual(expected);
+  });
+
+  test("white pawns can move forward two squares from their starting rows", () => {
+    const moves = potentialNonCaptureMoves({
+      colour: "white",
+      type: "pawn",
+      position: positionFromEncodedCoordinates("A2"),
+    });
+    const expected = [
+      positionFromEncodedCoordinates("A3"),
+      positionFromEncodedCoordinates("A4"),
+    ];
+    expect(moves).toEqual(expected);
+  });
+
+  test("black pawns can move forward two squares from their starting rows", () => {
+    const moves = potentialNonCaptureMoves({
+      colour: "black",
+      type: "pawn",
+      position: positionFromEncodedCoordinates("A7"),
+    });
+    const expected = [
+      positionFromEncodedCoordinates("A5"),
+      positionFromEncodedCoordinates("A6"),
+    ];
     expect(moves).toEqual(expected);
   });
 
