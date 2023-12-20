@@ -1,45 +1,41 @@
-import {
-  Piece,
-  potentialCaptureMoves,
-  potentialNonCaptureMoves,
-} from "./Piece";
-import Position, { positionFromEncodedCoordinates } from "./Position";
+import { Piece, potentialCaptureMoves, potentialNonCaptureMoves } from './Piece';
+import Position, { positionFromEncodedCoordinates } from './Position';
 
-describe("potentialCaptureMoves", () => {
-  test("white pawn captures diagonally from left file", () => {
+describe('potentialCaptureMoves', () => {
+  test('white pawn captures diagonally from left file', () => {
     const moves = potentialCaptureMoves({
-      colour: "white",
-      type: "pawn",
+      colour: 'white',
+      type: 'pawn',
       position: new Position(0, 3),
     });
     const expected = [new Position(1, 4)];
     expect(moves).toEqual(expected);
   });
 
-  test("white pawn captures diagonally from right file", () => {
+  test('white pawn captures diagonally from right file', () => {
     const moves = potentialCaptureMoves({
-      colour: "white",
-      type: "pawn",
+      colour: 'white',
+      type: 'pawn',
       position: new Position(7, 1),
     });
     const expected = [new Position(6, 2)];
     expect(moves).toEqual(expected);
   });
 
-  test("white pawn captures diagonally from non-edge files", () => {
+  test('white pawn captures diagonally from non-edge files', () => {
     const moves = potentialCaptureMoves({
-      colour: "white",
-      type: "pawn",
+      colour: 'white',
+      type: 'pawn',
       position: new Position(3, 6),
     });
     const expected = [new Position(2, 7), new Position(4, 7)];
     expect(moves).toEqual(expected);
   });
 
-  test("black pawn captures diagonally", () => {
+  test('black pawn captures diagonally', () => {
     const moves = potentialCaptureMoves({
-      colour: "black",
-      type: "pawn",
+      colour: 'black',
+      type: 'pawn',
       position: new Position(2, 4),
     });
     const expected = [new Position(1, 3), new Position(3, 3)];
@@ -48,8 +44,8 @@ describe("potentialCaptureMoves", () => {
 
   test("bishops' potential capture moves are the same as potential non-capture moves", () => {
     const piece: Piece = {
-      colour: "white",
-      type: "bishop",
+      colour: 'white',
+      type: 'bishop',
       position: new Position(3, 6),
     };
     const moves = potentialCaptureMoves(piece);
@@ -59,8 +55,8 @@ describe("potentialCaptureMoves", () => {
 
   test("knights' potential capture moves are the same as potential non-capture moves", () => {
     const piece: Piece = {
-      colour: "black",
-      type: "knight",
+      colour: 'black',
+      type: 'knight',
       position: new Position(2, 4),
     };
     const moves = potentialCaptureMoves(piece);
@@ -70,8 +66,8 @@ describe("potentialCaptureMoves", () => {
 
   test("rooks' potential capture moves are the same as potential non-capture moves", () => {
     const piece: Piece = {
-      colour: "white",
-      type: "rook",
+      colour: 'white',
+      type: 'rook',
       position: new Position(1, 7),
     };
     const moves = potentialCaptureMoves(piece);
@@ -81,8 +77,8 @@ describe("potentialCaptureMoves", () => {
 
   test("queens' potential capture moves are the same as potential non-capture moves", () => {
     const piece: Piece = {
-      colour: "white",
-      type: "queen",
+      colour: 'white',
+      type: 'queen',
       position: new Position(0, 0),
     };
     const moves = potentialCaptureMoves(piece);
@@ -92,8 +88,8 @@ describe("potentialCaptureMoves", () => {
 
   test("kings' potential capture moves are the same as potential non-capture moves", () => {
     const piece: Piece = {
-      colour: "black",
-      type: "king",
+      colour: 'black',
+      type: 'king',
       position: new Position(3, 2),
     };
     const moves = potentialCaptureMoves(piece);
@@ -102,57 +98,51 @@ describe("potentialCaptureMoves", () => {
   });
 });
 
-describe("potentialNonCaptureMoves", () => {
-  test("white pawn moves forward one square", () => {
+describe('potentialNonCaptureMoves', () => {
+  test('white pawn moves forward one square', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "white",
-      type: "pawn",
+      colour: 'white',
+      type: 'pawn',
       position: new Position(3, 3),
     });
     const expected = [new Position(3, 4)];
     expect(moves).toEqual(expected);
   });
 
-  test("black pawn moves forward one square", () => {
+  test('black pawn moves forward one square', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "black",
-      type: "pawn",
+      colour: 'black',
+      type: 'pawn',
       position: new Position(2, 5),
     });
     const expected = [new Position(2, 4)];
     expect(moves).toEqual(expected);
   });
 
-  test("white pawns can move forward two squares from their starting rows", () => {
+  test('white pawns can move forward two squares from their starting rows', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "white",
-      type: "pawn",
-      position: positionFromEncodedCoordinates("A2"),
+      colour: 'white',
+      type: 'pawn',
+      position: positionFromEncodedCoordinates('A2'),
     });
-    const expected = [
-      positionFromEncodedCoordinates("A3"),
-      positionFromEncodedCoordinates("A4"),
-    ];
+    const expected = [positionFromEncodedCoordinates('A3'), positionFromEncodedCoordinates('A4')];
     expect(moves).toEqual(expected);
   });
 
-  test("black pawns can move forward two squares from their starting rows", () => {
+  test('black pawns can move forward two squares from their starting rows', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "black",
-      type: "pawn",
-      position: positionFromEncodedCoordinates("A7"),
+      colour: 'black',
+      type: 'pawn',
+      position: positionFromEncodedCoordinates('A7'),
     });
-    const expected = [
-      positionFromEncodedCoordinates("A5"),
-      positionFromEncodedCoordinates("A6"),
-    ];
+    const expected = [positionFromEncodedCoordinates('A5'), positionFromEncodedCoordinates('A6')];
     expect(moves).toEqual(expected);
   });
 
-  test("bishop moves diagonally from a corner", () => {
+  test('bishop moves diagonally from a corner', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "white",
-      type: "bishop",
+      colour: 'white',
+      type: 'bishop',
       position: new Position(0, 0),
     });
     const expected = [
@@ -167,10 +157,10 @@ describe("potentialNonCaptureMoves", () => {
     expect(moves).toEqual(expected);
   });
 
-  test("bishop moves diagonally from a non-corner", () => {
+  test('bishop moves diagonally from a non-corner', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "black",
-      type: "bishop",
+      colour: 'black',
+      type: 'bishop',
       position: new Position(3, 5),
     });
     const expected = [
@@ -189,20 +179,20 @@ describe("potentialNonCaptureMoves", () => {
     expect(moves).toEqual(expected);
   });
 
-  test("knight moves to two spaces from a corner", () => {
+  test('knight moves to two spaces from a corner', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "white",
-      type: "knight",
+      colour: 'white',
+      type: 'knight',
       position: new Position(0, 7),
     });
     const expected = [new Position(1, 5), new Position(2, 6)];
     expect(moves).toEqual(expected);
   });
 
-  test("knight moves to eight spaces from the centre", () => {
+  test('knight moves to eight spaces from the centre', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "black",
-      type: "knight",
+      colour: 'black',
+      type: 'knight',
       position: new Position(4, 4),
     });
     const expected = [
@@ -217,10 +207,10 @@ describe("potentialNonCaptureMoves", () => {
     ];
     expect(moves).toEqual(expected);
   });
-  test("rook moves horizontally and vertically", () => {
+  test('rook moves horizontally and vertically', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "white",
-      type: "rook",
+      colour: 'white',
+      type: 'rook',
       position: new Position(3, 4),
     });
     const expected = [
@@ -242,10 +232,10 @@ describe("potentialNonCaptureMoves", () => {
     expect(moves).toEqual(expected);
   });
 
-  test("queen moves horizontally, verticall and diagonally", () => {
+  test('queen moves horizontally, verticall and diagonally', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "white",
-      type: "queen",
+      colour: 'white',
+      type: 'queen',
       position: new Position(0, 0),
     });
     const expected = [
@@ -274,10 +264,10 @@ describe("potentialNonCaptureMoves", () => {
     expect(moves).toEqual(expected);
   });
 
-  test("king moves one square in any direction", () => {
+  test('king moves one square in any direction', () => {
     const moves = potentialNonCaptureMoves({
-      colour: "black",
-      type: "king",
+      colour: 'black',
+      type: 'king',
       position: new Position(3, 3),
     });
     const expected = [
