@@ -17,14 +17,14 @@ const fileMapping: Record<string, RowOrFileNumber> = {
 };
 
 const rowMapping: Record<string, RowOrFileNumber> = {
-  "1": 0,
-  "2": 1,
-  "3": 2,
-  "4": 3,
-  "5": 4,
-  "6": 5,
-  "7": 6,
-  "8": 7,
+  '1': 0,
+  '2': 1,
+  '3': 2,
+  '4': 3,
+  '5': 4,
+  '6': 5,
+  '7': 6,
+  '8': 7,
 };
 
 export default class Position {
@@ -37,29 +37,22 @@ export default class Position {
   }
 
   get encodedCoordinate(): string {
-    const file = Object.entries(fileMapping).find(
-      ([_, index]) => index === this.x
-    );
-    const row = Object.entries(rowMapping).find(
-      ([_, index]) => index === this.y
-    );
+    const file = Object.entries(fileMapping).find(([_, index]) => index === this.x);
+    const row = Object.entries(rowMapping).find(([_, index]) => index === this.y);
     if (file === undefined || row === undefined) {
-      throw new Error("Unexpected internal error");
+      throw new Error('Unexpected internal error');
     }
     return `${file[0]}${row[0]}`;
   }
 }
 
-export function positionFromEncodedCoordinates(
-  encodedCoordinates: string
-): Position {
-  const coordinateComponents = encodedCoordinates.split("");
+export function positionFromEncodedCoordinates(encodedCoordinates: string): Position {
+  const coordinateComponents = encodedCoordinates.split('');
   if (coordinateComponents.length !== 2) {
     throw new Error(`Invalid coordinates: ${encodedCoordinates}`);
   }
   const [file, row] = coordinateComponents;
-  const fileNumber: RowOrFileNumber | undefined =
-    fileMapping[file.toUpperCase()];
+  const fileNumber: RowOrFileNumber | undefined = fileMapping[file.toUpperCase()];
   const rowNumber: RowOrFileNumber | undefined = rowMapping[row];
   if (fileNumber === undefined || rowNumber === undefined) {
     throw new Error(`Invalid coordinates: ${encodedCoordinates}`);
@@ -75,29 +68,20 @@ export function findPositionsBetween(p1: Position, p2: Position): Position[] {
   if (p1.x === p2.x) {
     const maxY = Math.max(p1.y, p2.y);
     const minY = Math.min(p1.y, p2.y);
-    return allValidPositions.filter(
-      ({ x, y }) => x === p1.x && minY < y && y < maxY
-    );
+    return allValidPositions.filter(({ x, y }) => x === p1.x && minY < y && y < maxY);
   } else if (p1.y === p2.y) {
     const maxX = Math.max(p1.x, p2.x);
     const minX = Math.min(p1.x, p2.x);
-    return allValidPositions.filter(
-      ({ x, y }) => y === p1.y && minX < x && x < maxX
-    );
+    return allValidPositions.filter(({ x, y }) => y === p1.y && minX < x && x < maxX);
   } else if (Math.abs(p1.x - p2.x) === Math.abs(p1.y - p2.y)) {
     const maxX = Math.max(p1.x, p2.x);
     const minX = Math.min(p1.x, p2.x);
     const maxY = Math.max(p1.y, p2.y);
     const minY = Math.min(p1.y, p2.y);
     return allValidPositions.filter(
-      ({ x, y }) =>
-        minX < x &&
-        x < maxX &&
-        minY < y &&
-        y < maxY &&
-        Math.abs(p1.x - x) === Math.abs(p1.y - y)
+      ({ x, y }) => minX < x && x < maxX && minY < y && y < maxY && Math.abs(p1.x - x) === Math.abs(p1.y - y)
     );
   } else {
-    throw Error("No path between these points");
+    throw Error('No path between these points');
   }
 }

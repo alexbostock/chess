@@ -1,18 +1,8 @@
-import { potentialCaptureMoves, potentialNonCaptureMoves } from "./Piece";
-import Position, {
-  allRowsOrFiles,
-  allValidPositions,
-  findPositionsBetween,
-} from "./Position";
+import { potentialCaptureMoves, potentialNonCaptureMoves } from './Piece';
+import Position, { allRowsOrFiles, allValidPositions, findPositionsBetween } from './Position';
 
-export type PieceColour = "white" | "black";
-export type PieceType =
-  | "pawn"
-  | "bishop"
-  | "knight"
-  | "rook"
-  | "queen"
-  | "king";
+export type PieceColour = 'white' | 'black';
+export type PieceType = 'pawn' | 'bishop' | 'knight' | 'rook' | 'queen' | 'king';
 
 export interface Piece {
   colour: PieceColour;
@@ -39,42 +29,42 @@ export interface HistoricalMove extends Move {
         promotion?: PieceType;
       }
     | {
-        castling?: "king-side" | "queen-side";
+        castling?: 'king-side' | 'queen-side';
       };
-  attackOnKing?: "check" | "checkmate" | "stalemate";
-  gameEnd?: "white-wins" | "black-wins" | "draw";
+  attackOnKing?: 'check' | 'checkmate' | 'stalemate';
+  gameEnd?: 'white-wins' | 'black-wins' | 'draw';
 }
 
 function createDefaultPieces(): Piece[] {
   const whitePawns: Piece[] = allRowsOrFiles.map((x) => ({
-    colour: "white",
-    type: "pawn",
+    colour: 'white',
+    type: 'pawn',
     position: new Position(x, 1),
   }));
   const blackPawns: Piece[] = allRowsOrFiles.map((x) => ({
-    colour: "black",
-    type: "pawn",
+    colour: 'black',
+    type: 'pawn',
     position: new Position(x, 6),
   }));
   return [
     ...whitePawns,
     ...blackPawns,
-    { position: new Position(0, 0), colour: "white", type: "rook" },
-    { position: new Position(0, 7), colour: "black", type: "rook" },
-    { position: new Position(1, 0), colour: "white", type: "knight" },
-    { position: new Position(1, 7), colour: "black", type: "knight" },
-    { position: new Position(2, 0), colour: "white", type: "bishop" },
-    { position: new Position(2, 7), colour: "black", type: "bishop" },
-    { position: new Position(3, 0), colour: "white", type: "queen" },
-    { position: new Position(3, 7), colour: "black", type: "queen" },
-    { position: new Position(4, 0), colour: "white", type: "king" },
-    { position: new Position(4, 7), colour: "black", type: "king" },
-    { position: new Position(5, 0), colour: "white", type: "bishop" },
-    { position: new Position(5, 7), colour: "black", type: "bishop" },
-    { position: new Position(6, 0), colour: "white", type: "knight" },
-    { position: new Position(6, 7), colour: "black", type: "knight" },
-    { position: new Position(7, 0), colour: "white", type: "rook" },
-    { position: new Position(7, 7), colour: "black", type: "rook" },
+    { position: new Position(0, 0), colour: 'white', type: 'rook' },
+    { position: new Position(0, 7), colour: 'black', type: 'rook' },
+    { position: new Position(1, 0), colour: 'white', type: 'knight' },
+    { position: new Position(1, 7), colour: 'black', type: 'knight' },
+    { position: new Position(2, 0), colour: 'white', type: 'bishop' },
+    { position: new Position(2, 7), colour: 'black', type: 'bishop' },
+    { position: new Position(3, 0), colour: 'white', type: 'queen' },
+    { position: new Position(3, 7), colour: 'black', type: 'queen' },
+    { position: new Position(4, 0), colour: 'white', type: 'king' },
+    { position: new Position(4, 7), colour: 'black', type: 'king' },
+    { position: new Position(5, 0), colour: 'white', type: 'bishop' },
+    { position: new Position(5, 7), colour: 'black', type: 'bishop' },
+    { position: new Position(6, 0), colour: 'white', type: 'knight' },
+    { position: new Position(6, 7), colour: 'black', type: 'knight' },
+    { position: new Position(7, 0), colour: 'white', type: 'rook' },
+    { position: new Position(7, 7), colour: 'black', type: 'rook' },
   ];
 }
 
@@ -83,18 +73,14 @@ export default class Board {
   nextToMove: PieceColour;
   pastMoves: HistoricalMove[]; // Oldest first
 
-  constructor(
-    pieces?: Piece[],
-    nextToMove?: PieceColour,
-    pastMoves?: HistoricalMove[]
-  ) {
+  constructor(pieces?: Piece[], nextToMove?: PieceColour, pastMoves?: HistoricalMove[]) {
     this.pieces = pieces ?? createDefaultPieces();
-    this.nextToMove = nextToMove ?? "white";
+    this.nextToMove = nextToMove ?? 'white';
     // TODO: validate pastMoves consistent with pieces (if both provided)?
     this.pastMoves = pastMoves ?? [];
 
     if (!this.hasLegalState()) {
-      throw new Error("Illegal position");
+      throw new Error('Illegal position');
     }
   }
 
@@ -120,17 +106,13 @@ export default class Board {
       occupiedCoords.add(coords);
     }
 
-    const whiteKings = this.pieces.filter(
-      ({ colour, type }) => colour === "white" && type === "king"
-    );
-    const blackKings = this.pieces.filter(
-      ({ colour, type }) => colour === "black" && type === "king"
-    );
+    const whiteKings = this.pieces.filter(({ colour, type }) => colour === 'white' && type === 'king');
+    const blackKings = this.pieces.filter(({ colour, type }) => colour === 'black' && type === 'king');
     if (whiteKings.length !== 1 || blackKings.length !== 1) {
       return false;
     }
 
-    const justMovedPlayer = this.nextToMove === "white" ? "black" : "white";
+    const justMovedPlayer = this.nextToMove === 'white' ? 'black' : 'white';
     if (this.playerInCheck(justMovedPlayer)) {
       return false;
     }
@@ -139,20 +121,14 @@ export default class Board {
   }
 
   playerInCheck(kingColour: PieceColour): boolean {
-    const king = this.pieces.find(
-      ({ colour, type }) => colour === kingColour && type === "king"
-    );
+    const king = this.pieces.find(({ colour, type }) => colour === kingColour && type === 'king');
     if (!king) {
-      throw new Error("Internal error: invalid state");
+      throw new Error('Internal error: invalid state');
     }
-    const opposingPieces = this.pieces.filter(
-      (piece) => piece.colour !== kingColour
-    );
+    const opposingPieces = this.pieces.filter((piece) => piece.colour !== kingColour);
     for (const piece of opposingPieces) {
       for (const capturePosition of potentialCaptureMoves(piece)) {
-        const threatensKing =
-          capturePosition.x === king.position.x &&
-          capturePosition.y === king.position.y;
+        const threatensKing = capturePosition.x === king.position.x && capturePosition.y === king.position.y;
         if (threatensKing && !this.isBlocked(piece, capturePosition)) {
           return true;
         }
@@ -166,10 +142,7 @@ export default class Board {
     if (this.isLegalEnPassantMove(move) || this.isLegalCastlingMove(move)) {
       return true;
     }
-    const piece = this.pieces.find(
-      ({ position: { x, y } }) =>
-        x === move.fromPosition.x && y === move.fromPosition.y
-    );
+    const piece = this.pieces.find(({ position: { x, y } }) => x === move.fromPosition.x && y === move.fromPosition.y);
     if (!piece) {
       return false;
     }
@@ -177,18 +150,13 @@ export default class Board {
       return false;
     }
     const pieceAtDestination = this.pieces.find(
-      ({ position: { x, y } }) =>
-        x === move.toPosition.x && y === move.toPosition.y
+      ({ position: { x, y } }) => x === move.toPosition.x && y === move.toPosition.y
     );
     if (pieceAtDestination && piece.colour === pieceAtDestination.colour) {
       return false;
     }
-    const potentialMoves = pieceAtDestination
-      ? potentialCaptureMoves(piece)
-      : potentialNonCaptureMoves(piece);
-    const canMoveToTarget = !!potentialMoves.find(
-      ({ x, y }) => x === move.toPosition.x && y === move.toPosition.y
-    );
+    const potentialMoves = pieceAtDestination ? potentialCaptureMoves(piece) : potentialNonCaptureMoves(piece);
+    const canMoveToTarget = !!potentialMoves.find(({ x, y }) => x === move.toPosition.x && y === move.toPosition.y);
     if (!canMoveToTarget) {
       return false;
     }
@@ -197,18 +165,15 @@ export default class Board {
     }
 
     const boardStateAfterMove = this.clone();
-    boardStateAfterMove.nextToMove =
-      this.nextToMove === "white" ? "black" : "white";
+    boardStateAfterMove.nextToMove = this.nextToMove === 'white' ? 'black' : 'white';
     boardStateAfterMove.pieces = boardStateAfterMove.pieces.filter(
-      ({ position: { x, y } }) =>
-        !(x === move.toPosition.x && y === move.toPosition.y)
+      ({ position: { x, y } }) => !(x === move.toPosition.x && y === move.toPosition.y)
     );
     const movedPiece = boardStateAfterMove.pieces.find(
-      ({ position: { x, y } }) =>
-        x === move.fromPosition.x && y === move.fromPosition.y
+      ({ position: { x, y } }) => x === move.fromPosition.x && y === move.fromPosition.y
     );
     if (!movedPiece) {
-      throw Error("Internal error: should never occur");
+      throw Error('Internal error: should never occur');
     }
     movedPiece.position = move.toPosition;
     if (!boardStateAfterMove.hasLegalState()) {
@@ -219,11 +184,8 @@ export default class Board {
   }
 
   isLegalEnPassantMove(move: Move): boolean {
-    const piece = this.pieces.find(
-      ({ position: { x, y } }) =>
-        x === move.fromPosition.x && y === move.fromPosition.y
-    );
-    if (!piece || piece.type !== "pawn") {
+    const piece = this.pieces.find(({ position: { x, y } }) => x === move.fromPosition.x && y === move.fromPosition.y);
+    if (!piece || piece.type !== 'pawn') {
       return false;
     }
     if (piece.colour !== this.nextToMove) {
@@ -234,20 +196,14 @@ export default class Board {
 
     // Rank numbers are 0-indexed!
     const positionOfPieceBeingCaptured =
-      this.nextToMove === "white"
-        ? new Position(targetFile, 4)
-        : new Position(targetFile, 3);
+      this.nextToMove === 'white' ? new Position(targetFile, 4) : new Position(targetFile, 3);
     const previousPositionOfPieceBeingCaptured =
-      this.nextToMove === "white"
-        ? new Position(targetFile, 6)
-        : new Position(targetFile, 1);
+      this.nextToMove === 'white' ? new Position(targetFile, 6) : new Position(targetFile, 1);
 
     const validPreviousMove =
       this.previousMove &&
-      this.previousMove.fromPosition.x ===
-        previousPositionOfPieceBeingCaptured.x &&
-      this.previousMove.fromPosition.y ===
-        previousPositionOfPieceBeingCaptured.y &&
+      this.previousMove.fromPosition.x === previousPositionOfPieceBeingCaptured.x &&
+      this.previousMove.fromPosition.y === previousPositionOfPieceBeingCaptured.y &&
       this.previousMove.toPosition.x === positionOfPieceBeingCaptured.x &&
       this.previousMove.toPosition.y === positionOfPieceBeingCaptured.y;
 
@@ -256,28 +212,21 @@ export default class Board {
     }
 
     const validFromPosition =
-      Math.abs(move.fromPosition.x - targetFile) === 1 &&
-      move.fromPosition.y === positionOfPieceBeingCaptured.y;
+      Math.abs(move.fromPosition.x - targetFile) === 1 && move.fromPosition.y === positionOfPieceBeingCaptured.y;
     if (!validFromPosition) {
       return false;
     }
 
     const boardStateAfterMove = this.clone();
-    boardStateAfterMove.nextToMove =
-      this.nextToMove === "white" ? "black" : "white";
+    boardStateAfterMove.nextToMove = this.nextToMove === 'white' ? 'black' : 'white';
     boardStateAfterMove.pieces = boardStateAfterMove.pieces.filter(
-      ({ position: { x, y } }) =>
-        !(
-          x === positionOfPieceBeingCaptured.x &&
-          y === positionOfPieceBeingCaptured.y
-        )
+      ({ position: { x, y } }) => !(x === positionOfPieceBeingCaptured.x && y === positionOfPieceBeingCaptured.y)
     );
     const movedPiece = boardStateAfterMove.pieces.find(
-      ({ position: { x, y } }) =>
-        x === move.fromPosition.x && y === move.fromPosition.y
+      ({ position: { x, y } }) => x === move.fromPosition.x && y === move.fromPosition.y
     );
     if (!movedPiece) {
-      throw Error("Internal error: should never occur");
+      throw Error('Internal error: should never occur');
     }
     movedPiece.position = move.toPosition;
     if (!boardStateAfterMove.hasLegalState()) {
@@ -303,18 +252,12 @@ export default class Board {
 
     const king = this.pieces.find(
       ({ colour, type, position: { x, y } }) =>
-        colour === this.nextToMove &&
-        type === "king" &&
-        x === kingFile &&
-        y === castlingRow
+        colour === this.nextToMove && type === 'king' && x === kingFile && y === castlingRow
     );
     const expectedRookFile = move.toPosition.x > kingFile ? 7 : 0;
     const rook = this.pieces.find(
       ({ colour, type, position: { x, y } }) =>
-        colour === this.nextToMove &&
-        type === "rook" &&
-        x === expectedRookFile &&
-        y === castlingRow
+        colour === this.nextToMove && type === 'rook' && x === expectedRookFile && y === castlingRow
     );
     if (!king || !rook) {
       return false;
@@ -329,16 +272,15 @@ export default class Board {
     }
 
     const boardStateAfterMove = this.clone();
-    boardStateAfterMove.nextToMove =
-      this.nextToMove === "white" ? "black" : "white";
+    boardStateAfterMove.nextToMove = this.nextToMove === 'white' ? 'black' : 'white';
     const kingBeingMoved = boardStateAfterMove.pieces.find(
-      ({ colour, type }) => colour === this.nextToMove && type === "king"
+      ({ colour, type }) => colour === this.nextToMove && type === 'king'
     );
     const rookBeingMoved = boardStateAfterMove.pieces.find(
       ({ position: { x, y } }) => x === expectedRookFile && y === castlingRow
     );
     if (!kingBeingMoved || !rookBeingMoved) {
-      throw new Error("Internal error: should never occur");
+      throw new Error('Internal error: should never occur');
     }
 
     // Moving through check
@@ -356,15 +298,11 @@ export default class Board {
     }
 
     const kingAlreadyMoved = this.pastMoves.some(
-      ({ piece: { colour, type } }) =>
-        colour === this.nextToMove && type === "king"
+      ({ piece: { colour, type } }) => colour === this.nextToMove && type === 'king'
     );
     const rookAlreadyMoved = this.pastMoves.some(
       ({ piece: { colour, type }, toPosition: { x, y } }) =>
-        colour === this.nextToMove &&
-        type === "rook" &&
-        x === rook.position.x &&
-        y === rook.position.y
+        colour === this.nextToMove && type === 'rook' && x === rook.position.x && y === rook.position.y
     );
     if (kingAlreadyMoved || rookAlreadyMoved) {
       return false;
@@ -374,9 +312,7 @@ export default class Board {
   }
 
   allLegalMoves() {
-    const currentPlayersPieces = this.pieces.filter(
-      ({ colour }) => colour === this.nextToMove
-    );
+    const currentPlayersPieces = this.pieces.filter(({ colour }) => colour === this.nextToMove);
     const allLegalMoves: Move[] = [];
     for (const piece of currentPlayersPieces) {
       for (const toPosition of allValidPositions) {
@@ -393,19 +329,15 @@ export default class Board {
   }
 
   isStalemate() {
-    return (
-      this.allLegalMoves().length === 0 && !this.playerInCheck(this.nextToMove)
-    );
+    return this.allLegalMoves().length === 0 && !this.playerInCheck(this.nextToMove);
   }
 
   isCheckmate() {
-    return (
-      this.allLegalMoves().length === 0 && this.playerInCheck(this.nextToMove)
-    );
+    return this.allLegalMoves().length === 0 && this.playerInCheck(this.nextToMove);
   }
 
   isBlocked(piece: Piece, destination: Position) {
-    if (piece.type === "knight") {
+    if (piece.type === 'knight') {
       return false;
     }
     const squaresBetween = findPositionsBetween(piece.position, destination);
