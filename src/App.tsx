@@ -1,5 +1,5 @@
-import Board from "./Board";
-import BoardState from "./lib/Board";
+import Board from './Board';
+import BoardState from './lib/Board';
 
 function App() {
   return (
