@@ -1,9 +1,12 @@
-import BoardState from './lib/Board';
+import BoardState, { type Move } from './lib/Board';
 import { Piece } from './lib/Piece';
 import Position, { RowOrFileNumber, allRowsOrFiles } from './lib/Position';
 
-export default function Board(props: { board: BoardState }) {
-  const rows = allRowsOrFiles.map((rowNumber) => row(props.board, rowNumber));
+export default function Board(props: { board: BoardState; move: (move: Move) => void }) {
+  const rows = allRowsOrFiles
+    .slice()
+    .reverse()
+    .map((rowNumber) => row(props.board, rowNumber));
   const possibleMoves = props.board.allLegalMoves();
 
   const possibleMovesList = possibleMoves.length ? (
@@ -11,7 +14,11 @@ export default function Board(props: { board: BoardState }) {
       <p>Possible moves:</p>
       <ul>
         {possibleMoves.map(({ fromPosition, toPosition }) => (
-          <li>{`${fromPosition.encodedCoordinate} to ${toPosition.encodedCoordinate}`}</li>
+          <li>
+            <button
+              onClick={() => props.move({ fromPosition, toPosition })}
+            >{`${fromPosition.encodedCoordinate} to ${toPosition.encodedCoordinate}`}</button>
+          </li>
         ))}
       </ul>
     </>
@@ -47,7 +54,7 @@ function cellContent(piece: Piece | undefined) {
     return '';
   }
 
-  if (piece.colour === 'white') {
+  if (piece.colour === 'black') {
     switch (piece.type) {
       case 'king':
         return '♔';
