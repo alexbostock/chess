@@ -1,3 +1,4 @@
+import GameStatus from './GameStatus';
 import BoardState, { type Move } from './lib/Board';
 import { Piece } from './lib/Piece';
 import Position, { RowOrFileNumber, allRowsOrFiles } from './lib/Position';
@@ -29,7 +30,7 @@ export default function Board(props: { board: BoardState; move: (move: Move) => 
   return (
     <div className="game-view">
       <div className="game-sidebar">
-        <p>Next player to move: {props.board.nextToMove}</p>
+        <GameStatus board={props.board} />
         {possibleMovesList}
       </div>
 
