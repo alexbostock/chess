@@ -4,10 +4,14 @@ import { Piece } from './lib/Piece';
 import Position, { RowOrFileNumber, allRowsOrFiles } from './lib/Position';
 
 export default function Board(props: { board: BoardState; move: (move: Move) => void }) {
-  const rows = allRowsOrFiles
-    .slice()
-    .reverse()
-    .map((rowNumber) => row(props.board, rowNumber));
+  const rows = [
+    labelRow('labels-top'),
+    ...allRowsOrFiles
+      .slice()
+      .reverse()
+      .map((rowNumber) => row(props.board, rowNumber)),
+    labelRow('labels-bottom'),
+  ];
   const possibleMoves = props.board.allLegalMoves();
 
   const possibleMovesList = possibleMoves.length ? (
@@ -15,7 +19,7 @@ export default function Board(props: { board: BoardState; move: (move: Move) => 
       <p>Possible moves:</p>
       <ul>
         {possibleMoves.map(({ fromPosition, toPosition }) => (
-          <li>
+          <li key={`${fromPosition.encodedCoordinate}_${toPosition.encodedCoordinate}`}>
             <button
               onClick={() => props.move({ fromPosition, toPosition })}
             >{`${fromPosition.encodedCoordinate} to ${toPosition.encodedCoordinate}`}</button>
@@ -34,20 +38,53 @@ export default function Board(props: { board: BoardState; move: (move: Move) => 
         {possibleMovesList}
       </div>
 
-      <div className="board">{rows}</div>
+      <div className="board-container">
+        <table className="board">
+          <tbody>{rows}</tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
 function row(board: BoardState, rowNumber: RowOrFileNumber) {
-  const cells = allRowsOrFiles.map((columnNumber) =>
-    cell(board.pieceAtPosition(new Position(columnNumber, rowNumber)))
+  const cells = [
+    label((rowNumber + 1).toString(), 'label-left'),
+    ...allRowsOrFiles.map((columnNumber) =>
+      cell(board.pieceAtPosition(new Position(columnNumber, rowNumber)), new Position(columnNumber, rowNumber))
+    ),
+    label((rowNumber + 1).toString(), 'label-right'),
+  ];
+  return (
+    <tr key={`row-${rowNumber}`} className="board-row">
+      {cells}
+    </tr>
   );
-  return <div className="board-row">{cells}</div>;
 }
 
-function cell(piece: Piece | undefined) {
-  return <div className="board-cell">{cellContent(piece)}</div>;
+function labelRow(key: string) {
+  const labels = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ''].map((text, index) => label(text, index.toString()));
+  return (
+    <tr key={key} className="board-label-row">
+      {labels}
+    </tr>
+  );
+}
+
+function cell(piece: Piece | undefined, pos: Position) {
+  return (
+    <td key={pos.encodedCoordinate} className="board-cell">
+      {cellContent(piece)}
+    </td>
+  );
+}
+
+function label(labelText: string, key: string) {
+  return (
+    <td key={key} className="board-label">
+      {labelText}
+    </td>
+  );
 }
 
 function cellContent(piece: Piece | undefined) {

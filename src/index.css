@@ -18,20 +18,55 @@ body {
   flex-grow: 1;
 }
 
+.board-container {
+  padding: 2em;
+}
+
 .board {
   font-size: 2em;
   text-align: center;
 
-  padding: 2em;
-}
-
-.board-row {
-  display: flex;
-  flex-direction: row;
+  border-collapse: collapse;
 }
 
 .board-cell {
   border: 1px solid black;
   height: 50px;
   width: 50px;
+}
+
+.board-row:nth-child(even) > .board-cell:nth-child(even),
+.board-row:nth-child(odd) > .board-cell:nth-child(odd) {
+  background-color: #555555;
+}
+
+.board-label {
+  height: 50px;
+  width: 50px;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+
+  font-weight: lighter;
+}
+
+.board-label:first-child,
+.board-label:last-child {
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.board-label:first-child {
+  border-left: none;
+}
+
+.board-label:last-child {
+  border-right: none;
+}
+
+.board-label-row:first-child > .board-label {
+  border-top: none;
+}
+
+.board-label-row:last-child > .board-label {
+  border-bottom: none;
 }
