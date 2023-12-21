@@ -14,12 +14,12 @@ body {
   flex-direction: row-reverse;
 }
 
-.game-view > .game-sidebar {
-  flex-grow: 1;
+.game-view > * {
+  padding: 2em;
 }
 
-.board-container {
-  padding: 2em;
+.game-view > .game-sidebar {
+  flex-grow: 1;
 }
 
 .board {

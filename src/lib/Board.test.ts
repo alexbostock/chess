@@ -1480,4 +1480,6 @@ describe('makeMove', () => {
 
     expect(() => board.makeMove(move, 'knight')).toThrow();
   });
+
+  // TODO: checkmate and stalemate
 });

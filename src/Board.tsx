@@ -9,6 +9,10 @@ export default function Board(props: { board: BoardState; move: (move: Move) => 
   const [currentlySelectedPosition, selectPosition] = useState<Position | undefined>();
 
   function handleClick(position: Position) {
+    if (props.board.isCheckmate() || props.board.isStalemate()) {
+      return;
+    }
+
     const piece = props.board.pieceAtPosition(position);
     if (piece && piece.colour === props.board.nextToMove) {
       selectPosition(position);
@@ -59,30 +63,10 @@ export default function Board(props: { board: BoardState; move: (move: Move) => 
       .map((rowNumber) => row(props.board, rowNumber)),
     labelRow('labels-bottom'),
   ];
-  const possibleMoves = props.board.allLegalMoves();
-
-  const possibleMovesList = possibleMoves.length ? (
-    <>
-      <p>Possible moves:</p>
-      <ul>
-        {possibleMoves.map(({ fromPosition, toPosition }) => (
-          <li key={`${fromPosition.encodedCoordinate}_${toPosition.encodedCoordinate}`}>
-            <button
-              onClick={() => props.move({ fromPosition, toPosition })}
-            >{`${fromPosition.encodedCoordinate} to ${toPosition.encodedCoordinate}`}</button>
-          </li>
-        ))}
-      </ul>
-    </>
-  ) : (
-    <></>
-  );
 
   return (
     <div className="game-view">
       <div className="game-sidebar">
-        <GameStatus board={props.board} />
-        {possibleMovesList}
         <MoveHistory board={props.board} />
       </div>
 
@@ -90,6 +74,7 @@ export default function Board(props: { board: BoardState; move: (move: Move) => 
         <table className="board">
           <tbody>{rows}</tbody>
         </table>
+        <GameStatus board={props.board} />
       </div>
     </div>
   );
