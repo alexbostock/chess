@@ -1,4 +1,5 @@
 import GameStatus from './GameStatus';
+import MoveHistory from './MoveHistory';
 import BoardState, { type Move } from './lib/Board';
 import { Piece } from './lib/Piece';
 import Position, { RowOrFileNumber, allRowsOrFiles } from './lib/Position';
@@ -36,6 +37,7 @@ export default function Board(props: { board: BoardState; move: (move: Move) => 
       <div className="game-sidebar">
         <GameStatus board={props.board} />
         {possibleMovesList}
+        <MoveHistory board={props.board} />
       </div>
 
       <div className="board-container">
@@ -63,7 +65,7 @@ function row(board: BoardState, rowNumber: RowOrFileNumber) {
 }
 
 function labelRow(key: string) {
-  const labels = ['', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', ''].map((text, index) => label(text, index.toString()));
+  const labels = ['', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', ''].map((text, index) => label(text, index.toString()));
   return (
     <tr key={key} className="board-label-row">
       {labels}
