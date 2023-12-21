@@ -353,6 +353,179 @@ export default class Board {
 
   clone(): Board {
     const clonedPieces = this.pieces.map((piece) => ({ ...piece }));
-    return new Board(clonedPieces, this.nextToMove);
+    const clonedPastMoves = this.pastMoves.map((move) => ({ ...move }));
+    return new Board(clonedPieces, this.nextToMove, clonedPastMoves);
+  }
+
+  makeMove(move: Move, promoteTo?: 'knight' | 'bishop' | 'rook' | 'queen'): Board {
+    if (!this.isLegalMove(move)) {
+      throw new Error('Invalid move');
+    }
+
+    if (this.isLegalCastlingMove(move)) {
+      return this.makeCastlingMove(move);
+    }
+    if (this.isLegalEnPassantMove(move)) {
+      return this.makeEnPassantMove(move);
+    }
+
+    const boardStateAfterMove = this.clone();
+
+    const isCapture = !!this.pieceAtPosition(move.toPosition);
+
+    boardStateAfterMove.nextToMove = this.nextToMove === 'white' ? 'black' : 'white';
+    boardStateAfterMove.pieces = boardStateAfterMove.pieces.filter(
+      ({ position: { x, y } }) => !(x === move.toPosition.x && y === move.toPosition.y)
+    );
+    const movedPiece = boardStateAfterMove.pieces.find(
+      ({ position: { x, y } }) => x === move.fromPosition.x && y === move.fromPosition.y
+    );
+    if (!movedPiece) {
+      throw Error('Internal error: should never occur');
+    }
+    movedPiece.position = move.toPosition;
+
+    const isPromotion = movedPiece.type === 'pawn' && (move.toPosition.y === 0 || move.toPosition.y === 7);
+    if (isPromotion && !promoteTo) {
+      throw new Error('Must specify piece to promote to');
+    } else if (!isPromotion && promoteTo) {
+      throw new Error('Unexpected promoteTo arg for non-promotion move');
+    }
+
+    if (promoteTo) {
+      movedPiece.type = promoteTo;
+    }
+
+    const attackOnKing = this.isCheckmate()
+      ? 'checkmate'
+      : this.isStalemate()
+      ? 'stalemate'
+      : this.playerInCheck(boardStateAfterMove.nextToMove)
+      ? 'check'
+      : undefined;
+    const gameEnd = this.isCheckmate()
+      ? this.nextToMove === 'white'
+        ? 'white-wins'
+        : 'black-wins'
+      : this.isStalemate()
+      ? 'draw'
+      : undefined;
+
+    // TODO: draw by repetition / 50 moves
+
+    boardStateAfterMove.pastMoves.push({
+      ...move,
+      capture: isCapture,
+      piece: {
+        colour: movedPiece.colour,
+        type: promoteTo ? 'pawn' : movedPiece.type,
+      },
+      ...(promoteTo && { specialMove: { promotion: promoteTo } }),
+      ...(attackOnKing && { attackOnKing }),
+      ...(gameEnd && { gameEnd }),
+    });
+
+    if (!boardStateAfterMove.hasLegalState()) {
+      throw new Error('Invalid board state');
+    }
+
+    return boardStateAfterMove;
+  }
+
+  makeCastlingMove(move: Move): Board {
+    if (!this.isLegalCastlingMove(move)) {
+      throw new Error('Illegal move');
+    }
+
+    const boardAfterMove = this.clone();
+    boardAfterMove.nextToMove = this.nextToMove === 'white' ? 'black' : 'white';
+    const king = boardAfterMove.pieceAtPosition(move.fromPosition);
+    if (!king) {
+      throw new Error('Cannot find king');
+    }
+
+    if (move.fromPosition.x > move.toPosition.x) {
+      const rookPosition = new Position(0, move.fromPosition.y);
+      const rook = boardAfterMove.pieceAtPosition(rookPosition);
+      if (!rook) {
+        throw new Error('Cannot find rook');
+      }
+
+      king.position = move.toPosition;
+      rook.position = new Position(3, move.fromPosition.y);
+
+      boardAfterMove.pastMoves.push({
+        ...move,
+        piece: {
+          colour: king.colour,
+          type: 'king',
+        },
+        capture: false,
+        specialMove: {
+          castling: 'queen-side',
+        },
+        // TODO: check for attackOnKing / gameEnd
+      });
+    } else {
+      const rookPosition = new Position(7, move.fromPosition.y);
+      const rook = boardAfterMove.pieceAtPosition(rookPosition);
+      if (!rook) {
+        throw new Error('Cannot find rook');
+      }
+
+      king.position = move.toPosition;
+      rook.position = new Position(5, move.fromPosition.y);
+
+      boardAfterMove.pastMoves.push({
+        ...move,
+        piece: {
+          colour: king.colour,
+          type: 'king',
+        },
+        capture: false,
+        specialMove: {
+          castling: 'king-side',
+        },
+        // TODO: check for attackOnKing / gameEnd
+      });
+    }
+
+    return boardAfterMove;
+  }
+
+  makeEnPassantMove(move: Move): Board {
+    if (!this.isLegalEnPassantMove(move)) {
+      throw new Error('Invalid move');
+    }
+
+    const boardAfterMove = this.clone();
+    boardAfterMove.nextToMove = this.nextToMove === 'white' ? 'black' : 'white';
+
+    const movedPawn = boardAfterMove.pieceAtPosition(move.fromPosition);
+    if (!movedPawn) {
+      throw new Error('Cannot find moved pawn');
+    }
+
+    const capturedPawnPosition = new Position(move.toPosition.x, move.fromPosition.y);
+    boardAfterMove.pieces = boardAfterMove.pieces.filter(
+      ({ position: { x, y } }) => !(x === capturedPawnPosition.x && y === capturedPawnPosition.y)
+    );
+
+    movedPawn.position = move.toPosition;
+
+    boardAfterMove.pastMoves.push({
+      ...move,
+      capture: true,
+      piece: {
+        colour: movedPawn.colour,
+        type: 'pawn',
+      },
+      specialMove: {
+        enPassant: true,
+      },
+      // TODO: check for attackOnKing / gameEnd
+    });
+
+    return boardAfterMove;
   }
 }

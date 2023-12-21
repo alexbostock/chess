@@ -1219,3 +1219,253 @@ describe('Castling', () => {
     expect(board.isLegalMove(castlingMove)).toBe(false);
   });
 });
+
+describe('makeMove', () => {
+  test('basic move', () => {
+    const a2 = positionFromEncodedCoordinates('A2');
+    const a4 = positionFromEncodedCoordinates('A4');
+
+    const board = new Board();
+
+    const boardAfterMove = board.makeMove({
+      fromPosition: a2,
+      toPosition: a4,
+    });
+
+    expect(boardAfterMove.pieceAtPosition(a4)?.type).toBe('pawn');
+    expect(boardAfterMove.pieceAtPosition(a2)).toBeUndefined();
+    expect(boardAfterMove.pastMoves).toEqual([
+      { piece: { colour: 'white', type: 'pawn' }, capture: false, fromPosition: a2, toPosition: a4 },
+    ]);
+  });
+
+  test('capture', () => {
+    const b1 = positionFromEncodedCoordinates('B1');
+    const b4 = positionFromEncodedCoordinates('B4');
+
+    const board = new Board([
+      { colour: 'white', position: b4, type: 'rook' },
+      { colour: 'black', position: b1, type: 'knight' },
+      { colour: 'white', position: positionFromEncodedCoordinates('f7'), type: 'king' },
+      { colour: 'black', position: positionFromEncodedCoordinates('d3'), type: 'king' },
+    ]);
+
+    const boardAfterMove = board.makeMove({
+      fromPosition: b4,
+      toPosition: b1,
+    });
+
+    expect(boardAfterMove.pieceAtPosition(b1)).toEqual({ colour: 'white', type: 'rook', position: b1 });
+    expect(boardAfterMove.pieceAtPosition(b4)).toBeUndefined();
+
+    const expectedPreviousMove: HistoricalMove = {
+      fromPosition: b4,
+      toPosition: b1,
+      capture: true,
+      piece: {
+        colour: 'white',
+        type: 'rook',
+      },
+    };
+    expect(boardAfterMove.previousMove).toEqual(expectedPreviousMove);
+  });
+
+  test('invalid move', () => {
+    const board = new Board();
+
+    const move = () =>
+      board.makeMove({
+        fromPosition: positionFromEncodedCoordinates('B2'),
+        toPosition: positionFromEncodedCoordinates('F7'),
+      });
+
+    expect(move).toThrow();
+  });
+
+  test('does not mutate original board', () => {
+    const board = new Board();
+    board.makeMove({
+      fromPosition: positionFromEncodedCoordinates('D2'),
+      toPosition: positionFromEncodedCoordinates('D4'),
+    });
+
+    expect(board).toEqual(new Board());
+  });
+
+  test('en passant', () => {
+    const g7 = positionFromEncodedCoordinates('g7');
+    const g6 = positionFromEncodedCoordinates('g6');
+    const g5 = positionFromEncodedCoordinates('g5');
+    const f5 = positionFromEncodedCoordinates('f5');
+
+    const board = new Board(
+      [
+        { colour: 'white', position: positionFromEncodedCoordinates('a1'), type: 'king' },
+        { colour: 'black', position: positionFromEncodedCoordinates('h1'), type: 'king' },
+        { colour: 'white', position: f5, type: 'pawn' },
+        { colour: 'black', position: g7, type: 'pawn' },
+      ],
+      'black'
+    );
+
+    const boardAfterSetupMove = board.makeMove({
+      fromPosition: g7,
+      toPosition: g5,
+    });
+
+    expect(boardAfterSetupMove.pieceAtPosition(g7)).toBeUndefined();
+    expect(boardAfterSetupMove.pieceAtPosition(g5)).toEqual({ colour: 'black', type: 'pawn', position: g5 });
+
+    const boardAfterEnPassant = boardAfterSetupMove.makeMove({
+      fromPosition: f5,
+      toPosition: g6,
+    });
+
+    expect(boardAfterEnPassant.pieceAtPosition(g5)).toBeUndefined();
+    expect(boardAfterEnPassant.pieceAtPosition(g6)).toEqual({ colour: 'white', type: 'pawn', position: g6 });
+
+    const expectedPreviousMove: HistoricalMove = {
+      fromPosition: f5,
+      toPosition: g6,
+      capture: true,
+      piece: {
+        colour: 'white',
+        type: 'pawn',
+      },
+      specialMove: {
+        enPassant: true,
+      },
+    };
+    expect(boardAfterEnPassant.previousMove).toEqual(expectedPreviousMove);
+
+    expect(boardAfterEnPassant.pastMoves).toHaveLength(2);
+  });
+
+  test('castling king-side', () => {
+    const e1 = positionFromEncodedCoordinates('e1');
+    const f1 = positionFromEncodedCoordinates('f1');
+    const g1 = positionFromEncodedCoordinates('g1');
+    const h1 = positionFromEncodedCoordinates('h1');
+
+    const board = new Board([
+      { colour: 'white', type: 'king', position: e1 },
+      { colour: 'white', type: 'rook', position: h1 },
+      { colour: 'black', type: 'king', position: positionFromEncodedCoordinates('F7') },
+    ]);
+
+    const boardAfterMove = board.makeMove({ fromPosition: e1, toPosition: g1 });
+
+    expect(boardAfterMove.pieceAtPosition(e1)).toBeUndefined();
+    expect(boardAfterMove.pieceAtPosition(f1)).toEqual({ colour: 'white', type: 'rook', position: f1 });
+    expect(boardAfterMove.pieceAtPosition(g1)).toEqual({ colour: 'white', type: 'king', position: g1 });
+    expect(boardAfterMove.pieceAtPosition(h1)).toBeUndefined();
+
+    const expectedPreviousMove: HistoricalMove = {
+      fromPosition: e1,
+      toPosition: g1,
+      capture: false,
+      piece: {
+        colour: 'white',
+        type: 'king',
+      },
+      specialMove: {
+        castling: 'king-side',
+      },
+    };
+
+    expect(boardAfterMove.previousMove).toEqual(expectedPreviousMove);
+  });
+
+  test('castling queen-side', () => {
+    const a1 = positionFromEncodedCoordinates('a1');
+    const c1 = positionFromEncodedCoordinates('c1');
+    const d1 = positionFromEncodedCoordinates('d1');
+    const e1 = positionFromEncodedCoordinates('e1');
+
+    const board = new Board([
+      { colour: 'white', type: 'king', position: e1 },
+      { colour: 'white', type: 'rook', position: a1 },
+      { colour: 'black', type: 'king', position: positionFromEncodedCoordinates('F7') },
+    ]);
+
+    const boardAfterMove = board.makeMove({ fromPosition: e1, toPosition: c1 });
+
+    expect(boardAfterMove.pieceAtPosition(a1)).toBeUndefined();
+    expect(boardAfterMove.pieceAtPosition(c1)).toEqual({ colour: 'white', type: 'king', position: c1 });
+    expect(boardAfterMove.pieceAtPosition(d1)).toEqual({ colour: 'white', type: 'rook', position: d1 });
+    expect(boardAfterMove.pieceAtPosition(e1)).toBeUndefined();
+
+    const expectedPreviousMove: HistoricalMove = {
+      fromPosition: e1,
+      toPosition: c1,
+      capture: false,
+      piece: {
+        colour: 'white',
+        type: 'king',
+      },
+      specialMove: {
+        castling: 'queen-side',
+      },
+    };
+
+    expect(boardAfterMove.previousMove).toEqual(expectedPreviousMove);
+  });
+
+  test('promotion', () => {
+    const e7 = positionFromEncodedCoordinates('E7');
+    const e8 = positionFromEncodedCoordinates('E8');
+
+    const board = new Board([
+      { colour: 'white', position: positionFromEncodedCoordinates('a1'), type: 'king' },
+      { colour: 'black', position: positionFromEncodedCoordinates('h1'), type: 'king' },
+      { colour: 'white', position: e7, type: 'pawn' },
+    ]);
+
+    const boardAfterMove = board.makeMove({ fromPosition: e7, toPosition: e8 }, 'bishop');
+
+    expect(boardAfterMove.pieceAtPosition(e8)).toEqual({ colour: 'white', type: 'bishop', position: e8 });
+
+    const expectedPreviousMove: HistoricalMove = {
+      fromPosition: e7,
+      toPosition: e8,
+      capture: false,
+      piece: {
+        colour: 'white',
+        type: 'pawn',
+      },
+      specialMove: {
+        promotion: 'bishop',
+      },
+    };
+    expect(boardAfterMove.previousMove).toEqual(expectedPreviousMove);
+  });
+
+  test('promotion with invalid input', () => {
+    const e7 = positionFromEncodedCoordinates('E7');
+
+    const board = new Board([
+      { colour: 'white', position: positionFromEncodedCoordinates('a1'), type: 'king' },
+      { colour: 'black', position: positionFromEncodedCoordinates('h1'), type: 'king' },
+      { colour: 'white', position: e7, type: 'pawn' },
+    ]);
+
+    const move = () => board.makeMove({ fromPosition: e7, toPosition: positionFromEncodedCoordinates('F7') });
+
+    expect(move).toThrow();
+  });
+
+  test('non-promotion with invalid input', () => {
+    const board = new Board();
+
+    const move = () =>
+      board.makeMove(
+        {
+          fromPosition: positionFromEncodedCoordinates('b2'),
+          toPosition: positionFromEncodedCoordinates('b3'),
+        },
+        'knight'
+      );
+
+    expect(move).toThrow();
+  });
+});
