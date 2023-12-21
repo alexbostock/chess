@@ -184,7 +184,6 @@ export default class Board {
   }
 
   isLegalEnPassantMove(move: Move): boolean {
-    // TODO: fix false positives
     const piece = this.pieces.find(({ position: { x, y } }) => x === move.fromPosition.x && y === move.fromPosition.y);
     if (!piece || piece.type !== 'pawn') {
       return false;
@@ -215,6 +214,14 @@ export default class Board {
     const validFromPosition =
       Math.abs(move.fromPosition.x - targetFile) === 1 && move.fromPosition.y === positionOfPieceBeingCaptured.y;
     if (!validFromPosition) {
+      return false;
+    }
+
+    const validToPosition =
+      this.nextToMove === 'white'
+        ? move.toPosition.y === move.fromPosition.y + 1
+        : move.toPosition.y === move.fromPosition.y - 1;
+    if (!validToPosition) {
       return false;
     }
 

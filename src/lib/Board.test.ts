@@ -736,6 +736,14 @@ describe('En passant', () => {
 
     expect(board.isLegalMove(enPassantMove)).toBe(true);
 
+    const nearbyMoves: Move[] = ['A2', 'A4', 'A5', 'A6'].map((encoded) => ({
+      fromPosition: positionFromEncodedCoordinates('B4'),
+      toPosition: positionFromEncodedCoordinates(encoded),
+    }));
+    for (const invalidMove of nearbyMoves) {
+      expect(board.isLegalMove(invalidMove)).toBe(false);
+    }
+
     const allMoves = board.allLegalMoves();
     const enPassantMoveInAllLegalMoves = allMoves.find(
       ({ fromPosition, toPosition }) =>
