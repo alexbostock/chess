@@ -184,6 +184,7 @@ export default class Board {
   }
 
   isLegalEnPassantMove(move: Move): boolean {
+    // TODO: fix false positives
     const piece = this.pieces.find(({ position: { x, y } }) => x === move.fromPosition.x && y === move.fromPosition.y);
     if (!piece || piece.type !== 'pawn') {
       return false;

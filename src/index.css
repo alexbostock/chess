@@ -35,6 +35,14 @@ body {
   width: 50px;
 }
 
+.board-cell-selected {
+  background-color: green !important;
+}
+
+.board-cell-possible-move {
+  background-color: darkgreen !important;
+}
+
 .board-row:nth-child(even) > .board-cell:nth-child(even),
 .board-row:nth-child(odd) > .board-cell:nth-child(odd) {
   background-color: #555555;
