@@ -311,6 +311,15 @@ export default class Board {
     return true;
   }
 
+  moveIsPromotion(move: Move): boolean {
+    const piece = this.pieceAtPosition(move.fromPosition);
+    return (
+      piece?.type === 'pawn' &&
+      ((this.nextToMove === 'white' && move.toPosition.y === 7) ||
+        (this.nextToMove === 'black' && move.toPosition.y === 0))
+    );
+  }
+
   allLegalMoves() {
     const currentPlayersPieces = this.pieces.filter(({ colour }) => colour === this.nextToMove);
     const allLegalMoves: Move[] = [];

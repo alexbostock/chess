@@ -6,7 +6,10 @@ function App() {
   const [board, setBoard] = useState(new BoardState());
   return (
     <div>
-      <Board board={board} move={(move) => setBoard(board.makeMove(move))} />
+      <Board
+        board={board}
+        move={(move) => setBoard(board.moveIsPromotion(move) ? board.makeMove(move, 'queen') : board.makeMove(move))}
+      />
     </div>
   );
 }

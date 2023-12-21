@@ -1421,7 +1421,11 @@ describe('makeMove', () => {
       { colour: 'white', position: e7, type: 'pawn' },
     ]);
 
-    const boardAfterMove = board.makeMove({ fromPosition: e7, toPosition: e8 }, 'bishop');
+    const move = { fromPosition: e7, toPosition: e8 };
+
+    expect(board.moveIsPromotion(move)).toBe(true);
+
+    const boardAfterMove = board.makeMove(move, 'bishop');
 
     expect(boardAfterMove.pieceAtPosition(e8)).toEqual({ colour: 'white', type: 'bishop', position: e8 });
 
@@ -1449,23 +1453,23 @@ describe('makeMove', () => {
       { colour: 'white', position: e7, type: 'pawn' },
     ]);
 
-    const move = () => board.makeMove({ fromPosition: e7, toPosition: positionFromEncodedCoordinates('F7') });
+    const move = { fromPosition: e7, toPosition: positionFromEncodedCoordinates('e8') };
 
-    expect(move).toThrow();
+    expect(board.moveIsPromotion(move)).toBe(true);
+
+    expect(() => board.makeMove(move)).toThrow();
   });
 
   test('non-promotion with invalid input', () => {
     const board = new Board();
 
-    const move = () =>
-      board.makeMove(
-        {
-          fromPosition: positionFromEncodedCoordinates('b2'),
-          toPosition: positionFromEncodedCoordinates('b3'),
-        },
-        'knight'
-      );
+    const move = {
+      fromPosition: positionFromEncodedCoordinates('b2'),
+      toPosition: positionFromEncodedCoordinates('b3'),
+    };
 
-    expect(move).toThrow();
+    expect(board.moveIsPromotion(move)).toBe(false);
+
+    expect(() => board.makeMove(move, 'knight')).toThrow();
   });
 });
