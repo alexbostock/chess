@@ -12,6 +12,8 @@ body {
 .game-view {
   display: flex;
   flex-direction: row-reverse;
+
+  max-height: 90vh;
 }
 
 .game-view > * {
@@ -22,15 +24,19 @@ body {
   flex-grow: 1;
 }
 
+.game-sidebar {
+  overflow: scroll;
+}
+
 .board {
   font-size: 2em;
   text-align: center;
 
   border-collapse: collapse;
+  box-sizing: border-box;
 }
 
 .board-cell {
-  border: 1px solid black;
   height: 50px;
   width: 50px;
 }
@@ -73,8 +79,41 @@ body {
 
 .board-label-row:first-child > .board-label {
   border-top: none;
+  border-bottom: 1px solid black;
 }
 
 .board-label-row:last-child > .board-label {
+  border-top: 1px solid black;
   border-bottom: none;
+}
+
+.game-status {
+  text-align: center;
+  font-size: 2em;
+  color: #aaaaaa;
+}
+
+.move-history {
+  background-color: #555555;
+  border-collapse: collapse;
+}
+
+.move-history td {
+  padding: 0.4em 1em;
+  text-align: left;
+
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.move-history td:first-child:not([colspan]) {
+  border-right: 1px solid black;
+}
+
+.move-history td:last-child {
+  text-align: right;
+}
+
+.move-history td[colspan] {
+  text-align: center;
 }

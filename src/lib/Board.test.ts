@@ -1483,3 +1483,74 @@ describe('makeMove', () => {
 
   // TODO: checkmate and stalemate
 });
+
+describe('isThreeMoveRepetition', () => {
+  const a1 = positionFromEncodedCoordinates('a1');
+  const a2 = positionFromEncodedCoordinates('a2');
+  const h7 = positionFromEncodedCoordinates('h7');
+  const h8 = positionFromEncodedCoordinates('h8');
+
+  const historicalMoves: HistoricalMove[] = [
+    {
+      piece: {
+        colour: 'white',
+        type: 'king',
+      },
+      fromPosition: a2,
+      toPosition: a1,
+      capture: false,
+    },
+    {
+      piece: {
+        colour: 'black',
+        type: 'king',
+      },
+      fromPosition: h8,
+      toPosition: h7,
+      capture: false,
+    },
+    {
+      piece: {
+        colour: 'white',
+        type: 'king',
+      },
+      fromPosition: a1,
+      toPosition: a2,
+      capture: false,
+    },
+    {
+      piece: {
+        colour: 'black',
+        type: 'king',
+      },
+      fromPosition: h7,
+      toPosition: h8,
+      capture: false,
+    },
+  ];
+  test('2 repeated moves', () => {
+    const board = new Board(
+      [
+        { colour: 'white', type: 'king', position: a1 },
+        { colour: 'black', type: 'king', position: h8 },
+      ],
+      'white',
+      [...historicalMoves, ...historicalMoves]
+    );
+
+    expect(board.isThreeMoveRepetition()).toBe(false);
+  });
+
+  test('3 repeated moves', () => {
+    const board = new Board(
+      [
+        { colour: 'white', type: 'king', position: a2 },
+        { colour: 'black', type: 'king', position: h7 },
+      ],
+      'white',
+      [...historicalMoves, ...historicalMoves, ...historicalMoves.slice(0, 2)]
+    );
+
+    expect(board.isThreeMoveRepetition()).toBe(true);
+  });
+});

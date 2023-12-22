@@ -353,6 +353,30 @@ export default class Board {
     return this.allLegalMoves().length === 0 && this.playerInCheck(this.nextToMove);
   }
 
+  isThreeMoveRepetition() {
+    const indexLastMoveWithCaptureOrPromotion = this.pastMoves.findLastIndex(
+      ({ capture, specialMove }) => capture || (specialMove && 'promotion' in specialMove)
+    );
+    const movesSinceLastCaptureOrPromotion = this.pastMoves.slice(indexLastMoveWithCaptureOrPromotion);
+
+    const counts = new Map<string, number>();
+
+    let board = this.clone();
+    for (const move of movesSinceLastCaptureOrPromotion.reverse()) {
+      const serialised = board.serialise();
+      console.log(move);
+      console.log(serialised);
+      const count = counts.get(serialised) ?? 0;
+      if (count === 2) {
+        return true;
+      }
+      counts.set(serialised, count + 1);
+      board = board.reverseMove(move);
+    }
+
+    return false;
+  }
+
   isBlocked(piece: Piece, destination: Position) {
     if (piece.type === 'knight') {
       return false;
@@ -428,7 +452,7 @@ export default class Board {
       ? 'draw'
       : undefined;
 
-    // TODO: draw by repetition / 50 moves
+    // TODO: 50 moves
 
     boardStateAfterMove.pastMoves.push({
       ...move,
@@ -545,4 +569,29 @@ export default class Board {
 
     return boardAfterMove;
   }
+
+  serialise(): string {
+    return JSON.stringify({
+      pieces: this.pieces,
+      nextToMove: this.nextToMove,
+    });
+  }
+
+  reverseMove(move: HistoricalMove): Board {
+    const boardBeforeMove = this.clone();
+    boardBeforeMove.nextToMove = this.nextToMove === 'white' ? 'black' : 'white';
+    const movedPiece = boardBeforeMove.pieces.find(
+      ({ position: { x, y } }) => x === move.toPosition.x && y === move.toPosition.y
+    );
+    if (!movedPiece) {
+      throw new Error('Cannot find moved piece');
+    }
+    movedPiece.position = move.fromPosition;
+
+    // TODO: special case for castling
+
+    return boardBeforeMove;
+  }
 }
+
+// TODO: insufficient material, resignation, draw by agreement
